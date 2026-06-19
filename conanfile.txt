@@ -1,0 +1,11 @@
+[requires]
+qt/6.7.0
+nlohmann_json/3.11.3
+spdlog/1.13.0
+
+[generators]
+CMakeDeps
+CMakeToolchain
+
+[layout]
+cmake_layout
