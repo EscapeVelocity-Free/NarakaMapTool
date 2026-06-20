@@ -1,4 +1,7 @@
 #include <QApplication>
+#include <QIcon>
+#include <QPixmap>
+#include <QImage>
 #include <QtPlugin>
 #include "control_panel.h"
 #include "overlay_window.h"
@@ -10,6 +13,14 @@
 #ifdef QT_STATIC
 Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 #endif
+
+// 从 exe 自身资源中加载嵌入的应用图标（resources/app.rc 中的 IDI_APPICON），
+// 这样不依赖外部 .ico 文件，exe 单文件即可在任务栏/标题栏显示图标。
+static QIcon loadAppIcon() {
+    HICON hIcon = LoadIconW(GetModuleHandleW(NULL), L"IDI_APPICON");
+    if (!hIcon) hIcon = LoadIconW(NULL, (LPCWSTR)IDI_APPLICATION);
+    return QIcon(QPixmap::fromImage(QImage::fromHICON(hIcon)));
+}
 
 int main(int argc, char* argv[]) {
     SetConsoleOutputCP(CP_UTF8);
@@ -23,6 +34,7 @@ int main(int argc, char* argv[]) {
     ConfigManager::init("config.json");
 
     QApplication a(argc, argv);
+    a.setWindowIcon(loadAppIcon()); // 全局窗口图标（任务栏 / 标题栏 / Alt-Tab）
 
     // 1. 创建组件
     OverlayWindow overlay;

@@ -18,6 +18,18 @@ set(SOURCES
     src/config_manager.cpp
 )
 
+# Windows 资源文件（exe 图标 + 版本信息），仅 MSVC 下编译
+if(MSVC)
+    # 用 configure_file 把图标绝对路径（正斜杠）填入 .rc，再编译生成的 .rc。
+    # 这样避免 rc 编译器对反斜杠/空格/工作目录的解析差异。
+    set(APP_ICON_PATH "${CMAKE_CURRENT_SOURCE_DIR}/resources/app.ico")
+    configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/app.rc
+        ${CMAKE_CURRENT_BINARY_DIR}/generated/app.rc
+        @ONLY)
+    list(APPEND SOURCES ${CMAKE_CURRENT_BINARY_DIR}/generated/app.rc)
+endif()
+
 if(MSVC)
     # 添加 WIN32 参数，让程序作为窗口程序启动而非控制台程序
     add_executable(NarakaMapTool WIN32 ${SOURCES})
@@ -59,6 +71,8 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/resources"
         DESTINATION .
         PATTERN ".vs" EXCLUDE   # 显式排除可能冲突的目录
         PATTERN "build" EXCLUDE
+        PATTERN "app.rc" EXCLUDE        # 源码文件，不需进分发包
+        PATTERN "app.ico" EXCLUDE       # 图标已嵌入 exe，无需单独分发
 )
 
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/map" 

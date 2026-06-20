@@ -1,0 +1,51 @@
+// Windows 资源文件：嵌入应用程序图标 + 版本信息
+//
+// 注意：图标路径用「相对于本 .rc 文件」的相对路径，
+// rc 编译器按文件所在目录解析，避免反斜杠/引号转义问题。
+
+#include <windows.h>
+
+// 主图标（任务栏 / 资源管理器 / Alt-Tab）
+// IDI_APPICON 同时也是缺省窗口图标（见 control_panel.cpp 的 setWindowIcon）
+// 路径由 CMake 的 configure_file 在编译时以正斜杠绝对路径替换，
+// 避免 rc 编译器对反斜杠/空格/工作目录的兼容问题。
+IDI_APPICON ICON "@APP_ICON_PATH@"
+
+// 版本信息（右键 exe -> 属性 -> 详细信息）
+#define VER_FILEVERSION             1,0,0,0
+#define VER_FILEVERSION_STR         "1.0.0.0"
+#define VER_PRODUCTVERSION          1,0,0,0
+#define VER_PRODUCTVERSION_STR      "1.0.0.0"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION    VER_FILEVERSION
+PRODUCTVERSION VER_PRODUCTVERSION
+FILEFLAGSMASK  0x3fL
+#ifdef _DEBUG
+FILEFLAGS      VS_FF_DEBUG
+#else
+FILEFLAGS      0x0L
+#endif
+FILEOS         VOS_NT_WINDOWS32
+FILETYPE       VFT_APP
+FILESUBTYPE    VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080403B0"   // 0x0804 = 简体中文, 0x03B0 = UTF-16LE / 多语言
+        BEGIN
+            VALUE "CompanyName",      "StarStudio"
+            VALUE "FileDescription",  "Naraka Map Tool"
+            VALUE "FileVersion",      VER_FILEVERSION_STR
+            VALUE "InternalName",     "NarakaMapTool"
+            VALUE "OriginalFilename", "NarakaMapTool.exe"
+            VALUE "ProductName",      "NarakaMapTool"
+            VALUE "ProductVersion",   VER_PRODUCTVERSION_STR
+            VALUE "LegalCopyright",   "Copyright (C) 2026 StarStudio. MIT License."
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0804, 0x03B0
+    END
+END

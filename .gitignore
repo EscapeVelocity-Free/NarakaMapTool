@@ -1,2 +1,12 @@
 .vs
 build/
+out/
+
+# Conan / CMake 本地用户配置（由 conan install 自动生成，因机器而异）
+CMakeUserPresets.json
+
+# 日志
+*.log
+
+# Windows cmd 误重定向产物（2>nul 在部分 shell 下会生成实体文件）
+nul
