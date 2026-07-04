@@ -97,6 +97,8 @@ ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent) {
     m_mapCombo->addItem(QString::fromUtf8("聚窟州"), "0");
     m_mapCombo->addItem(QString::fromUtf8("火罗国"), "1");
     m_mapCombo->addItem(QString::fromUtf8("龙隐洞天"), "2");
+    m_mapCombo->addItem(QString::fromUtf8("风起火罗"), "3");
+    m_mapCombo->addItem(QString::fromUtf8("满江红"), "4");
     m_mapCombo->setCurrentIndex(2);
 
     headerLayout->addWidget(titleLabel);
@@ -195,6 +197,44 @@ ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent) {
         for (auto const& [box, key] : m_boxMap) { box->blockSignals(true); box->setChecked(false); box->blockSignals(false); }
         notifySelectionChanged();
         });
+
+    mainLayout->addWidget(createGroup(QString::fromUtf8("副本资源"), {
+        {"博火箱·史诗", "riftChestEpic"},
+        {"博火箱·史诗(必出)", "riftChestEpicGuaranteed"},
+        {"博火箱·传说", "riftChestLegendary"},
+        {"博火箱·史诗(沙)", "riftChestEpicSand"},
+        {"博火箱·史诗(雪)", "riftChestEpicSnow"},
+        {"博火箱·史诗(雷)", "riftChestEpicThunder"},
+        {"博火箱·传说(雷)", "riftChestLegendaryThunder"},
+        {"暗门", "riftSecret"},
+        {"矿车", "riftMinecart"},
+        {"守卫", "riftQuestGuard"},
+        {"水井", "riftWaterWell"},
+        {"闸门", "riftGateOfYang"},
+        {"猎洞", "riftShovel"},
+        {"据点", "riftStronghold"},
+        {"据点(小Boss)", "riftStrongholdMiniBoss"},
+        {"据点(Boss)", "riftStrongholdBoss"},
+        {"骰子", "riftDice"},
+        {"轿子", "riftSedanChair"},
+        {"金遗物", "riftGoldRelic"},
+        {"武器箱", "riftWeaponBox"},
+        {"气流", "riftAirCurrent"},
+        {"小篮", "riftSmallHamper"},
+        {"大篮", "riftBigHamper"},
+        {"存钱罐", "riftPiggyBank"},
+        {"石碑·解读", "riftSteleDecipher"},
+        {"洞钥匙", "riftCaveKey"},
+        {"黑焰兵", "riftBlackFlameSoldier"},
+        {"大药柜", "riftLargeMedicineCabinet"},
+        {"信件", "riftLetter"},
+        {"小妆盒", "riftSmallMakeupBox"},
+        {"大收集箱", "riftBigCollectionContainer"},
+        {"大收集柜", "riftLargeCollectionCabinet"},
+        {"大杂物柜", "riftBigUtilityCabinet"},
+        {"大杂货铺", "riftLargeGroceryStore"},
+        {"大收集铺", "riftLargeCollectionShop"},
+        }));
 
     mainLayout->addStretch(); // 底部撑开
 

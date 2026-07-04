@@ -1,5 +1,6 @@
 ﻿#include "overlay_window.h"
 #include <fstream>
+#include <filesystem>
 #include <shlwapi.h>
 #include <cmath>
 #include "config_manager.h"
@@ -20,10 +21,35 @@ std::string GetMappingFileName(std::string type) {
         {"soulAltar", "soul_altar"}, {"treasureCave", "treasure_cave"}, {"forbiddenSeal", "forbidden_seal"},
         {"gateOfYang", "gate_of_yang"}, {"carnivorousYam", "carnivorous_yam"}, {"snowLotus", "snow_lotus"},
         {"springSource", "spring_source"}, {"riftDealer", "rift_dealer"}, {"weaponRack", "weapon_rack"},
-        {"healingTree", "healing_tree"}, {"prayerShrine", "prayer_shrine"}, {"floatingPile", "floating_pile"}
+        {"healingTree", "healing_tree"}, {"prayerShrine", "prayer_shrine"}, {"floatingPile", "floating_pile"},
+        {"riftChestEpic", "rift_chest_epic"}, {"riftChestEpicGuaranteed", "rift_chest_epic_2"},
+        {"riftChestLegendary", "rift_chest_legendary"}, {"riftChestEpicSand", "rift_chest_sand"},
+        {"riftChestEpicSnow", "rift_chest_snow"}, {"riftChestEpicThunder", "rift_chest_epic_thunder"},
+        {"riftChestLegendaryThunder", "rift_chest_legendary_thunder"}, {"riftAirCurrent", "rift_air_current"},
+        {"riftBigCollectionContainer", "rift_big_collection_container"}, {"riftBigHamper", "rift_big_hamper"},
+        {"riftBigUtilityCabinet", "rift_big_utility_cabinet"}, {"riftBlackFlameSoldier", "rift_black_flame_soldier"},
+        {"riftCaveKey", "rift_cave_key"}, {"riftDice", "rift_dice"}, {"riftGateOfYang", "rift_gate_of_yang"},
+        {"riftGoldRelic", "rift_gold_relic"}, {"riftLargeCollectionCabinet", "rift_large_collection_cabinet"},
+        {"riftLargeCollectionShop", "rift_large_collection_shop"}, {"riftLargeMedicineCabinet", "rift_large_medicine_cabinet"},
+        {"riftLetter", "rift_letter"}, {"riftMinecart", "rift_minecart"}, {"riftPiggyBank", "rift_piggy_bank"},
+        {"riftQuestGuard", "rift_quest_guard"}, {"riftSecret", "rift_secret"}, {"riftSedanChair", "rift_sedan_chair"},
+        {"riftShovel", "rift_shovel"}, {"riftSmallHamper", "rift_small_hamper"},
+        {"riftSmallMakeupBox", "rift_small_makeup_box"}, {"riftSteleDecipher", "rift_stele_decipher"},
+        {"riftStronghold", "rift_stronghold"}, {"riftStrongholdBoss", "rift_stronghold_boss"},
+        {"riftStrongholdMiniBoss", "rift_stronghold_mini_boss"}, {"riftWaterWell", "rift_water_well"},
+        {"riftWeaponBox", "rift_weapon_box"}
     };
     if (nameMap.count(type)) return nameMap[type];
     return type;
+}
+
+static std::string ResolveMapBackgroundName(const std::string& mapId) {
+    if (mapId == "0") return "morus_3.png";
+    if (mapId == "1") return "holoroth_3.png";
+    if (mapId == "2") return "dragon_3.png";
+    if (mapId == "3") return "fqhl.png";
+    if (mapId == "4") return "rivers_runs_red.png";
+    return {};
 }
 
 OverlayWindow::OverlayWindow() : m_hwnd(NULL), m_bgImg(NULL), m_currentMapId("2"), m_currentMapName(u8"龙隐洞天") {
@@ -46,22 +72,12 @@ void OverlayWindow::setMap(const std::string& mapId, const std::string& mapName)
         m_bgImg = nullptr; 
     }
     
-    // 1. Map Chinese name to English filename
-    std::string engBaseName = "unknown";
-    if (mapName == "聚窟州" || mapName == u8"聚窟州") {
-        engBaseName = "morus";
-    }
-    else if (mapName == "火罗国" || mapName == u8"火罗国") {
-        engBaseName = "holoroth";
-    }
-    else if (mapName == "龙隐洞天" || mapName == u8"龙隐洞天") {
-        engBaseName = "dragon";
-    }
-
     try {
-        // 2. Construct the new path (e.g., morus_3.png)
-        namespace fs = std::filesystem;
-        std::string fileName = engBaseName + "_3.png";
+        std::string fileName = ResolveMapBackgroundName(mapId);
+        if (fileName.empty()) {
+            Logger::warn("Unknown map selection: id={} name={}", mapId, mapName);
+        }
+
         fs::path fullPath = fs::u8path(ConfigManager::mapImagePath) / fileName;
 
         Logger::debug("Loading map file: {}", fullPath.string());
@@ -79,7 +95,7 @@ void OverlayWindow::setMap(const std::string& mapId, const std::string& mapName)
                 m_bgImg = nullptr;
             }
             else {
-                Logger::info("Map switched successfully to: {}", engBaseName);
+                Logger::info("Map switched successfully: {} ({})", mapId, mapName);
             }
         }
     }
