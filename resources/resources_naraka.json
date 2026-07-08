@@ -25128,5 +25128,484 @@
             ]
         },
         "map": "4"
+    },
+    {
+        "map": "5",
+        "helanArt": {
+            "MarkerList": [
+                {
+                    "type": "helanArt",
+                    "pos": [
+                        414.8,
+                        597
+                    ],
+                    "img": "5/helanArt/4a524fa75160fd5978d09be81b3728bc"
+                },
+                {
+                    "type": "helanArt",
+                    "pos": [
+                        572.9,
+                        816.4
+                    ],
+                    "img": "5/helanArt/7beb32fd6e3abc6220ced2103f2f639d"
+                },
+                {
+                    "type": "helanArt",
+                    "pos": [
+                        630.4,
+                        1647
+                    ],
+                    "img": "5/helanArt/9c878ab0909d40081e4fa00581ee8236"
+                },
+                {
+                    "type": "helanArt",
+                    "pos": [
+                        700.2,
+                        1362.1
+                    ],
+                    "img": "5/helanArt/12db533712a2fcf3d1f6104e2d974365"
+                },
+                {
+                    "type": "helanArt",
+                    "pos": [
+                        783.5,
+                        1590.5
+                    ],
+                    "img": "5/helanArt/fb20290ec6a2ce6b5d897972ca570ef9"
+                },
+                {
+                    "type": "helanArt",
+                    "pos": [
+                        884.9,
+                        1259.3
+                    ],
+                    "img": "5/helanArt/7b63916b65916c0c09bb8c8aa198e915"
+                },
+                {
+                    "type": "helanArt",
+                    "pos": [
+                        1063.8,
+                        995.5
+                    ],
+                    "img": "5/helanArt/404dcb06dcf82e388723cd9ace4a76b5"
+                },
+                {
+                    "type": "helanArt",
+                    "pos": [
+                        1082.5,
+                        1445.6
+                    ],
+                    "img": "5/helanArt/94b19501919c0d452000e83c70d2cf18"
+                },
+                {
+                    "type": "helanArt",
+                    "pos": [
+                        1299.4,
+                        1248.6
+                    ],
+                    "img": "5/helanArt/eb6d24e1692f14f3f03a6d256634a64c"
+                },
+                {
+                    "type": "helanArt",
+                    "pos": [
+                        1627.9,
+                        1555.6
+                    ],
+                    "img": "5/helanArt/8e5f1932a81c7c54e4e949f6ce620d5d"
+                },
+                {
+                    "type": "helanArt",
+                    "pos": [
+                        1799,
+                        651.7
+                    ],
+                    "img": "5/helanArt/e556c7799d8dace0246d6dee462c1fa5"
+                },
+                {
+                    "type": "helanArt",
+                    "pos": [
+                        1812.4,
+                        1444.8
+                    ],
+                    "img": "5/helanArt/20150982c233df5589c54701a8c28ba5"
+                }
+            ]
+        },
+        "firefly": {
+            "MarkerList": [
+                {
+                    "type": "firefly",
+                    "pos": [
+                        478.7,
+                        1472.9
+                    ],
+                    "img": "5/firefly/19c5affa417a794422b19984d1a9d3c4"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        482.4,
+                        1506
+                    ],
+                    "img": "5/firefly/b7f2e3eda8307c4a4e24e182f9537581"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        536.5,
+                        743.2
+                    ],
+                    "img": "5/firefly/d3bbb4511c426b891685b74d15320244"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        550.7,
+                        764.6
+                    ],
+                    "img": "5/firefly/b9a6f41aa7cc22ccaa5ac81f1023371e"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        559.3,
+                        742.6
+                    ],
+                    "img": "5/firefly/8378aa89a91a60a21bd21a99453bb389"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        577.2,
+                        528.3
+                    ],
+                    "img": "5/firefly/d543ad97628be4d681e514893723fcc6"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        578.2,
+                        513.5
+                    ],
+                    "img": "5/firefly/29912d77f7da62d4f30a769796abcf77"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        624.9,
+                        937
+                    ],
+                    "img": "5/firefly/ca1c3bd55e04f86b0645819acb218a80"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        632.1,
+                        939
+                    ],
+                    "img": "5/firefly/a49837caf274e8d997c52d65e106a0aa"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        658.8,
+                        1692.2
+                    ],
+                    "img": "5/firefly/0641802ff890d566effb53e10eb2717e"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        670,
+                        904.9
+                    ],
+                    "img": "5/firefly/c9d9ea0c5a836d372b6b502a2e6b405f"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        673.2,
+                        1698.2
+                    ],
+                    "img": "5/firefly/c01119b0ce84f35238c8218925bb82fa"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        674.2,
+                        1294.5
+                    ],
+                    "img": "5/firefly/78d0449cc970830c9dd91e9328693776"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        687.2,
+                        1304.8
+                    ],
+                    "img": "5/firefly/1b05262f05cf8a199d73538b5b2d818a"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        697.3,
+                        880.3
+                    ],
+                    "img": "5/firefly/1b0796fd6cae22820c0c9edbe7ea3346"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        780.5,
+                        741.2
+                    ],
+                    "img": "5/firefly/4339a30b14a19980c5f7c1bb22650b5d"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        804.5,
+                        1000
+                    ],
+                    "img": "5/firefly/692c65e88c91f999ba82ec9f984f93af"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        813.4,
+                        988.7
+                    ],
+                    "img": "5/firefly/78583b885dac461961efaf69ed71e13d"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1032.1,
+                        1509.1
+                    ],
+                    "img": "5/firefly/2f23da571b6a127f9c24123bb7994a9f"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1407.9,
+                        1203.6
+                    ],
+                    "img": "5/firefly/2c2a0deb3ee25ebcb9728377b5057e0b"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1415,
+                        1116.6
+                    ],
+                    "img": "5/firefly/8b015a7e998754beafedd92d090339ef"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1422.9,
+                        1100.6
+                    ],
+                    "img": "5/firefly/d9696ccd68eeaaa008ab0af7283db1ab"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1426.8,
+                        1216
+                    ],
+                    "img": "5/firefly/ecd3bea39a82df651792968354fce2f5"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1439.3,
+                        1096.8
+                    ],
+                    "img": "5/firefly/5d9c12204847cef86e1416d928068943"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1457.6,
+                        1133.2
+                    ],
+                    "img": "5/firefly/979eb808363e7d77df97f6afc0d98507"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1459.6,
+                        1303
+                    ],
+                    "img": "5/firefly/01f319ff5111f941446d414afb374ac7"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1465,
+                        1155.8
+                    ],
+                    "img": "5/firefly/d70b3d7370c89ae9139e2ff8493b2948"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1476.6,
+                        1305.6
+                    ],
+                    "img": "5/firefly/42a5ab5ce159964494c9dce34ac90af3"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1661.3,
+                        1197.5
+                    ],
+                    "img": "5/firefly/f74d7625afda97b152d071cc58e468c3"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1670.4,
+                        1218.8
+                    ],
+                    "img": "5/firefly/7294847c73c7e17f94745f04b1f84a4d"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        829.7,
+                        1718.3
+                    ],
+                    "img": "5/firefly/73608429a95b22acf495cc06fb7ebdeb"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        413.4,
+                        1146.5
+                    ],
+                    "img": "5/firefly/b35752eb43c472c6eb987f48aaba643b"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        423.5,
+                        1126.8
+                    ],
+                    "img": "5/firefly/b6db9bb584e0ad0a98d99d87f02d7327"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        434.1,
+                        1160.2
+                    ],
+                    "img": "5/firefly/b4305d7b3fcaaf702571b1edb655d45a"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        935.7,
+                        517.9
+                    ],
+                    "img": "5/firefly/9787b7c58e3881d4b373f12c4e050fad"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        939.3,
+                        496.4
+                    ],
+                    "img": "5/firefly/7af3c8a2fdeeb49a3542b281958b4b90"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1046.1,
+                        559.1
+                    ],
+                    "img": "5/firefly/5306f162cbbfaba72678f34bba79c2b2"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1056.2,
+                        555.8
+                    ],
+                    "img": "5/firefly/b28a45b9cb09fe4a0a46c3b1fc1bb6bb"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1116.6,
+                        260.9
+                    ],
+                    "img": "5/firefly/3f80dd1f310ff4f35a467c94f6000f7f"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1123.1,
+                        501.5
+                    ],
+                    "img": "5/firefly/ada262ea8b920bbd5f82562bfef0f3a4"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1140.7,
+                        233.1
+                    ],
+                    "img": "5/firefly/967de39d19ae39c2091a558cef182a15"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1143,
+                        505.2
+                    ],
+                    "img": "5/firefly/fe85682fe23be8b9718b88eef315c384"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1444,
+                        786.6
+                    ],
+                    "img": "5/firefly/6182b933465c5a42260174b47053f19f"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1464.4,
+                        777.9
+                    ],
+                    "img": "5/firefly/b3d24c325ecab401552f33682a8d6ce1"
+                }
+            ]
+        },
+        "treasureCave": {
+            "MarkerList": [
+                {
+                    "type": "treasureCave",
+                    "pos": [
+                        1106.3,
+                        532.4
+                    ],
+                    "img": "5/treasureCave/62983a78320b14dc136ca0a8c413187c"
+                },
+                {
+                    "type": "treasureCave",
+                    "pos": [
+                        1174.6,
+                        541.4
+                    ],
+                    "img": "5/treasureCave/bcc6d4d82f3ddbc7376dd16bc739cfcc"
+                }
+            ]
+        }
     }
 ]

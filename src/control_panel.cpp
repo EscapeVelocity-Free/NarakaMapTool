@@ -99,6 +99,7 @@ ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent) {
     m_mapCombo->addItem(QString::fromUtf8("龙隐洞天"), "2");
     m_mapCombo->addItem(QString::fromUtf8("风起火罗"), "3");
     m_mapCombo->addItem(QString::fromUtf8("满江红"), "4");
+    m_mapCombo->addItem(QString::fromUtf8("\xE5\xAE\x9B\xE6\xB8\xA0"), "5");
     m_mapCombo->setCurrentIndex(2);
 
     headerLayout->addWidget(titleLabel);
@@ -171,7 +172,8 @@ ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent) {
     bottomRow->addWidget(createGroup(QString::fromUtf8("重要设施"), {
         {"商店", "riftDealer"}, {"反魂台", "soulAltar"}, {"武器架", "weaponRack"},
         {"宝库", "treasureCave"}, {"奥义封印", "forbiddenSeal"}, {"回阳镜", "gateOfYang"},
-        {"食人花", "carnivorousYam"}, {"雪莲", "snowLotus"}, {"泉源", "springSource"}
+        {"食人花", "carnivorousYam"}, {"雪莲", "snowLotus"}, {"泉源", "springSource"},
+        {"\xE8\xB4\xBA\xE5\x85\xB0\xE8\x89\xBA", "helanArt"}
         }));
 
     bottomRow->addWidget(createGroup(QString::fromUtf8("其他"), {
@@ -198,7 +200,7 @@ ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent) {
         notifySelectionChanged();
         });
 
-    mainLayout->addWidget(createGroup(QString::fromUtf8("副本资源"), {
+    mainLayout->addWidget(createGroup(QString::fromUtf8("摸金"), {
         {"博火箱·史诗", "riftChestEpic"},
         {"博火箱·史诗(必出)", "riftChestEpicGuaranteed"},
         {"博火箱·传说", "riftChestLegendary"},

@@ -37,7 +37,7 @@ std::string GetMappingFileName(std::string type) {
         {"riftSmallMakeupBox", "rift_small_makeup_box"}, {"riftSteleDecipher", "rift_stele_decipher"},
         {"riftStronghold", "rift_stronghold"}, {"riftStrongholdBoss", "rift_stronghold_boss"},
         {"riftStrongholdMiniBoss", "rift_stronghold_mini_boss"}, {"riftWaterWell", "rift_water_well"},
-        {"riftWeaponBox", "rift_weapon_box"}
+        {"riftWeaponBox", "rift_weapon_box"}, {"helanArt", "helan_art"}
     };
     if (nameMap.count(type)) return nameMap[type];
     return type;
@@ -49,6 +49,7 @@ static std::string ResolveMapBackgroundName(const std::string& mapId) {
     if (mapId == "2") return "dragon_3.png";
     if (mapId == "3") return "fqhl.png";
     if (mapId == "4") return "rivers_runs_red.png";
+    if (mapId == "5") return "wanchu.png";
     return {};
 }
 
