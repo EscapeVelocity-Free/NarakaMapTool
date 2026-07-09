@@ -1,4 +1,4 @@
-#include <QApplication>
+﻿#include <QApplication>
 #include <QIcon>
 #include <QPixmap>
 #include <QImage>
@@ -63,6 +63,18 @@ int main(int argc, char* argv[]) {
         });
     QObject::connect(&detector, &MapStatusDetector::altTriggered, [&]() {
         overlay.handleAltAction();
+        });
+    QObject::connect(&detector, &MapStatusDetector::routeToggleTriggered, [&]() {
+        overlay.toggleRouteVisible();
+        });
+    QObject::connect(&detector, &MapStatusDetector::routeStartTriggered, [&]() {
+        overlay.setNearestPointAsRouteStart();
+        });
+    QObject::connect(&detector, &MapStatusDetector::routeExcludeTriggered, [&]() {
+        overlay.toggleNearestPointExcluded();
+        });
+    QObject::connect(&detector, &MapStatusDetector::routeResetTriggered, [&]() {
+        overlay.resetRoute();
         });
 
     QObject::connect(&panel, &ControlPanel::toggleBackground, [&](bool show) {

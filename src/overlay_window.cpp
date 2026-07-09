@@ -3,12 +3,96 @@
 #include <filesystem>
 #include <shlwapi.h>
 #include <cmath>
+#include <algorithm>
+#include <chrono>
+#include <limits>
+#include <sstream>
+#include <iterator>
+#include <utility>
 #include "config_manager.h"
 #include "logger.h"
 
 #pragma comment(lib, "Shlwapi.lib")
 using namespace Gdiplus;
 namespace fs = std::filesystem;
+
+namespace {
+constexpr double ROUTE_POINT_HIT_RADIUS = 80.0;
+constexpr int ROUTE_OPTIMIZE_BUDGET_MS = 35;
+using ScreenCoord = std::pair<int, int>;
+
+double ScreenDistanceSq(const ScreenCoord& a, const ScreenCoord& b) {
+    double dx = static_cast<double>(a.first - b.first);
+    double dy = static_cast<double>(a.second - b.second);
+    return dx * dx + dy * dy;
+}
+
+double RouteEdgeLength(const std::vector<ScreenCoord>& coords, const std::vector<size_t>& order, size_t left, size_t right) {
+    return std::sqrt(ScreenDistanceSq(coords[order[left]], coords[order[right]]));
+}
+
+std::vector<size_t> BuildNearestNeighborRoute(const std::vector<ScreenCoord>& coords, const std::vector<size_t>& candidates, size_t startPointIndex) {
+    if (candidates.empty()) return {};
+
+    std::vector<size_t> route;
+    route.reserve(candidates.size());
+
+    std::vector<bool> visited(coords.size(), false);
+    size_t current = startPointIndex;
+    if (std::find(candidates.begin(), candidates.end(), current) == candidates.end()) {
+        current = candidates.front();
+    }
+
+    route.push_back(current);
+    visited[current] = true;
+
+    while (route.size() < candidates.size()) {
+        size_t bestIndex = candidates.front();
+        double bestDist = (std::numeric_limits<double>::max)();
+
+        for (size_t candidate : candidates) {
+            if (visited[candidate]) continue;
+            double dist = ScreenDistanceSq(coords[current], coords[candidate]);
+            if (dist < bestDist) {
+                bestDist = dist;
+                bestIndex = candidate;
+            }
+        }
+
+        current = bestIndex;
+        visited[current] = true;
+        route.push_back(current);
+    }
+
+    return route;
+}
+
+void OptimizeRoute2Opt(const std::vector<ScreenCoord>& coords, std::vector<size_t>& route, int budgetMs) {
+    if (route.size() < 4) return;
+
+    auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(budgetMs);
+    bool improved = true;
+
+    while (improved && std::chrono::steady_clock::now() < deadline) {
+        improved = false;
+        for (size_t i = 1; i + 2 < route.size(); ++i) {
+            if (std::chrono::steady_clock::now() >= deadline) return;
+
+            for (size_t j = i + 1; j + 1 < route.size(); ++j) {
+                double oldLength = RouteEdgeLength(coords, route, i - 1, i) + RouteEdgeLength(coords, route, j, j + 1);
+                double newLength = RouteEdgeLength(coords, route, i - 1, j) + RouteEdgeLength(coords, route, i, j + 1);
+                if (newLength + 0.001 < oldLength) {
+                    std::reverse(route.begin() + i, route.begin() + j + 1);
+                    improved = true;
+                    break;
+                }
+            }
+
+            if (improved) break;
+        }
+    }
+}
+}
 
 // 图标名映射
 std::string GetMappingFileName(std::string type) {
@@ -67,6 +151,9 @@ OverlayWindow::~OverlayWindow() {
 void OverlayWindow::setMap(const std::string& mapId, const std::string& mapName) {
     m_currentMapId = mapId;
     m_currentMapName = mapName;
+    m_routeStartId.clear();
+    m_excludedPointIds.clear();
+    m_routeOrder.clear();
 
     if (m_bgImg) { 
         delete m_bgImg; 
@@ -106,11 +193,11 @@ void OverlayWindow::setMap(const std::string& mapId, const std::string& mapName)
 
 
     loadData();
-    if (m_hwnd) InvalidateRect(m_hwnd, NULL, TRUE);
+    invalidate();
 }
 
 void OverlayWindow::init(HINSTANCE hInst) {
-    // ��̬���㴰�ڼ�������
+    // 动态计算窗口几何参数
     m_winX = ConfigManager::mapOffsetX;
     m_winY = ConfigManager::mapOffsetY;
     m_winSize = ConfigManager::mapUiSize;
@@ -119,7 +206,7 @@ void OverlayWindow::init(HINSTANCE hInst) {
     wcex.lpfnWndProc = WndProc;
     wcex.hInstance = hInst;
     wcex.lpszClassName = L"NarakaOverlayWindowClass";
-    wcex.hbrBackground = CreateSolidBrush(RGB(1, 1, 1)); // ����ˢΪ͸����ɫ
+    wcex.hbrBackground = CreateSolidBrush(RGB(1, 1, 1)); // 背景刷为透明键色
     RegisterClassExW(&wcex);
 
     m_hwnd = CreateWindowExW(WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
@@ -132,7 +219,7 @@ void OverlayWindow::init(HINSTANCE hInst) {
 void OverlayWindow::updateResources(const std::vector<std::string>& keys) {
     m_activeKeys = keys;
     loadData();
-    if (m_hwnd) InvalidateRect(m_hwnd, NULL, TRUE);
+    invalidate();
 }
 
 void OverlayWindow::loadData() {
@@ -145,6 +232,7 @@ void OverlayWindow::loadData() {
             if (item.value("map", "") == m_currentMapId) {
                 for (const auto& key : m_activeKeys) {
                     if (item.contains(key)) {
+                        size_t markerIndex = 0;
                         for (auto& marker : item[key]["MarkerList"]) {
                             double gx = 0, gy = 0;
                             auto& pos = marker["pos"];
@@ -156,12 +244,29 @@ void OverlayWindow::loadData() {
                             // 存储绝对坐标
                             int ax = (int)((gx / 2048.0) * m_winSize) + m_winX;
                             int ay = (int)(((2048.0 - gy) / 2048.0) * m_winSize) + m_winY;
-                            m_points.push_back({ key, ax, ay });
+                            std::string id = marker.value("img", "");
+                            if (id.empty()) {
+                                std::ostringstream oss;
+                                oss << m_currentMapId << ':' << key << ':' << markerIndex << ':' << gx << ',' << gy;
+                                id = oss.str();
+                            }
+                            m_points.push_back({ id, key, ax, ay });
+                            ++markerIndex;
                         }
                     }
                 }
             }
         }
+
+        std::set<std::string> validIds;
+        for (const auto& point : m_points) validIds.insert(point.id);
+        for (auto it = m_excludedPointIds.begin(); it != m_excludedPointIds.end();) {
+            it = validIds.count(*it) ? std::next(it) : m_excludedPointIds.erase(it);
+        }
+        if (!m_routeStartId.empty() && !validIds.count(m_routeStartId)) {
+            m_routeStartId.clear();
+        }
+        rebuildRoute();
     }
     catch (...) {
         Logger::error("loadData error");
@@ -241,6 +346,163 @@ void OverlayWindow::handleAltAction() {
     }
 }
 
+void OverlayWindow::toggleRouteVisible() {
+    m_showRoute = !m_showRoute;
+    rebuildRoute();
+    invalidate();
+    Logger::info("Marker route visibility: {}", m_showRoute ? "on" : "off");
+}
+
+void OverlayWindow::resetRoute() {
+    m_excludedPointIds.clear();
+    m_routeStartId.clear();
+    rebuildRoute();
+    invalidate();
+    Logger::info("Marker route state reset.");
+}
+
+void OverlayWindow::setNearestPointAsRouteStart() {
+    int nearestIndex = findNearestPointToCursor(ROUTE_POINT_HIT_RADIUS);
+    if (nearestIndex < 0) {
+        Logger::debug("Route start skipped: no marker near cursor.");
+        return;
+    }
+
+    const Point& point = m_points[nearestIndex];
+    m_routeStartId = point.id;
+    m_excludedPointIds.erase(point.id);
+    m_showRoute = true;
+    rebuildRoute();
+    invalidate();
+    Logger::info("Route start set: {} ({})", point.type, point.id);
+}
+
+void OverlayWindow::toggleNearestPointExcluded() {
+    int nearestIndex = findNearestPointToCursor(ROUTE_POINT_HIT_RADIUS);
+    if (nearestIndex < 0) {
+        Logger::debug("Route exclude skipped: no marker near cursor.");
+        return;
+    }
+
+    const Point& point = m_points[nearestIndex];
+    if (m_excludedPointIds.count(point.id)) {
+        m_excludedPointIds.erase(point.id);
+        Logger::info("Route marker restored: {} ({})", point.type, point.id);
+    }
+    else {
+        m_excludedPointIds.insert(point.id);
+        if (m_routeStartId == point.id) {
+            m_routeStartId.clear();
+        }
+        Logger::info("Route marker excluded: {} ({})", point.type, point.id);
+    }
+
+    m_showRoute = true;
+    rebuildRoute();
+    invalidate();
+}
+
+int OverlayWindow::findNearestPointToCursor(double maxDistance) const {
+    POINT cur;
+    GetCursorPos(&cur);
+
+    if (cur.x < m_winX || cur.x > m_winX + m_winSize ||
+        cur.y < m_winY || cur.y > m_winY + m_winSize) {
+        return -1;
+    }
+
+    double bestDistSq = maxDistance * maxDistance;
+    int bestIndex = -1;
+    for (size_t i = 0; i < m_points.size(); ++i) {
+        const auto& point = m_points[i];
+        double dx = static_cast<double>(point.absX - cur.x);
+        double dy = static_cast<double>(point.absY - cur.y);
+        double distSq = dx * dx + dy * dy;
+        if (distSq < bestDistSq) {
+            bestDistSq = distSq;
+            bestIndex = static_cast<int>(i);
+        }
+    }
+
+    return bestIndex;
+}
+
+void OverlayWindow::rebuildRoute() {
+    m_routeOrder.clear();
+    if (!m_showRoute || m_points.size() < 2) return;
+
+    std::vector<ScreenCoord> coords;
+    coords.reserve(m_points.size());
+    for (const auto& point : m_points) {
+        coords.emplace_back(point.absX, point.absY);
+    }
+
+    std::vector<size_t> candidates;
+    candidates.reserve(m_points.size());
+    size_t startIndex = (std::numeric_limits<size_t>::max)();
+
+    for (size_t i = 0; i < m_points.size(); ++i) {
+        const auto& point = m_points[i];
+        if (m_excludedPointIds.count(point.id)) continue;
+        if (!m_routeStartId.empty() && point.id == m_routeStartId) {
+            startIndex = i;
+        }
+        candidates.push_back(i);
+    }
+
+    if (candidates.size() < 2) return;
+    if (startIndex == (std::numeric_limits<size_t>::max)()) {
+        startIndex = candidates.front();
+    }
+
+    m_routeOrder = BuildNearestNeighborRoute(coords, candidates, startIndex);
+    OptimizeRoute2Opt(coords, m_routeOrder, ROUTE_OPTIMIZE_BUDGET_MS);
+}
+
+void OverlayWindow::drawRoute(Graphics& g) {
+    if (!m_showRoute || m_routeOrder.size() < 2) return;
+
+    std::vector<PointF> points;
+    points.reserve(m_routeOrder.size());
+    for (size_t index : m_routeOrder) {
+        if (index >= m_points.size()) continue;
+        const auto& point = m_points[index];
+        points.emplace_back(
+            static_cast<REAL>(point.absX - m_winX),
+            static_cast<REAL>(point.absY - m_winY)
+        );
+    }
+    if (points.size() < 2) return;
+
+    Pen shadowPen(Color(160, 6, 20, 26), 7.0f);
+    shadowPen.SetLineJoin(LineJoinRound);
+    shadowPen.SetStartCap(LineCapRound);
+    shadowPen.SetEndCap(LineCapRound);
+    g.DrawLines(&shadowPen, points.data(), static_cast<INT>(points.size()));
+
+    Pen routePen(Color(255, 56, 189, 248), 4.0f);
+    routePen.SetDashStyle(DashStyleDash);
+    routePen.SetLineJoin(LineJoinRound);
+    routePen.SetStartCap(LineCapRound);
+    routePen.SetEndCap(LineCapRound);
+    g.DrawLines(&routePen, points.data(), static_cast<INT>(points.size()));
+}
+
+void OverlayWindow::drawRouteMarkerState(Graphics& g, const Point& pt, int localX, int localY) {
+    if (!m_showRoute) return;
+
+    if (pt.id == m_routeStartId) {
+        Pen startPen(Color(255, 56, 189, 248), 3.0f);
+        g.DrawEllipse(&startPen, localX - 17, localY - 17, 34, 34);
+    }
+
+    if (m_excludedPointIds.count(pt.id)) {
+        Pen excludedPen(Color(230, 230, 57, 70), 3.0f);
+        g.DrawLine(&excludedPen, localX - 13, localY - 13, localX + 13, localY + 13);
+        g.DrawLine(&excludedPen, localX + 13, localY - 13, localX - 13, localY + 13);
+    }
+}
+
 Gdiplus::Image* OverlayWindow::GetIcon(std::string type) {
     // 1. Check if the icon is already in cache to save CPU/IO
     if (m_iconCache.count(type)) {
@@ -297,6 +559,8 @@ void OverlayWindow::paint(HDC hdc) {
         g.DrawImage(m_bgImg, 0, 0, m_winSize, m_winSize);
     }
 
+    drawRoute(g);
+
     // 3. 绘制图标 (永远显示)
     const int drawSize = 24;
     for (const auto& pt : m_points) {
@@ -310,6 +574,7 @@ void OverlayWindow::paint(HDC hdc) {
             SolidBrush red(Color::Red);
             g.FillEllipse(&red, localX - 3, localY - 3, 6, 6);
         }
+        drawRouteMarkerState(g, pt, localX, localY);
     }
 
     // 4. 绘制红边框
@@ -349,5 +614,9 @@ bool OverlayWindow::isVisible() {
 
 void OverlayWindow::setShowBackground(bool show) {
     m_showBackground = show;
+    invalidate();
+}
+
+void OverlayWindow::invalidate() {
     if (m_hwnd) InvalidateRect(m_hwnd, NULL, TRUE);
 }

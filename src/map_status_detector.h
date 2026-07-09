@@ -1,4 +1,4 @@
-#ifndef MAP_STATUS_DETECTOR_H
+ï»¿#ifndef MAP_STATUS_DETECTOR_H
 #define MAP_STATUS_DETECTOR_H
 
 #include <QObject>
@@ -12,22 +12,32 @@ public:
     explicit MapStatusDetector(QObject* parent = nullptr);
 
 signals:
-    void mapVisibilityChanged(bool visible); // µØÍ¼´ò¿ª/¹Ø±ÕĞÅºÅ
-    void altTriggered();                     // Alt ¼ü´¥·¢ĞÅºÅ
+    void mapVisibilityChanged(bool visible); // åœ°å›¾æ‰“å¼€/å…³é—­ä¿¡å·
+    void altTriggered();                     // Alt é”®è§¦å‘ä¿¡å·
+    void routeToggleTriggered();             // ScrollLock: show/hide marker route
+    void routeStartTriggered();              // Pause: use nearest marker as route start
+    void routeExcludeTriggered();            // Insert: exclude/restore nearest marker
+    void routeResetTriggered();              // Home: reset route state
 
 private slots:
-    void processTick(); // ¶¨Ê±Æ÷´¥·¢µÄ¼ì²âº¯Êı
+    void processTick(); // å®šæ—¶å™¨è§¦å‘çš„æ£€æµ‹å‡½æ•°
 
 private:
     bool isPixelAreaWhite(int radius);
+    bool isKeyPressedOnce(int vk, bool& wasPressed);
+    void clearRouteKeyStates();
 
     QTimer* m_timer;
     bool m_isMapOpen = false;
     bool m_altWasPressed = false;
+    bool m_routeToggleWasPressed = false;
+    bool m_routeStartWasPressed = false;
+    bool m_routeExcludeWasPressed = false;
+    bool m_routeResetWasPressed = false;
 
     int m_whiteCount = 0;
     int m_blackCount = 0;
-    const int THRESHOLD = 3; // Á¬Ğø¼ì²âãĞÖµ
+    const int THRESHOLD = 3; // è¿ç»­æ£€æµ‹é˜ˆå€¼
 };
 
 #endif

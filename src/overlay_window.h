@@ -1,4 +1,4 @@
-#ifndef OVERLAY_WINDOW_H
+ï»¿#ifndef OVERLAY_WINDOW_H
 #define OVERLAY_WINDOW_H
 
 #include <windows.h>
@@ -6,9 +6,10 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 #include "nlohmann/json.hpp"
 
-// ¶¨ÒåµØÍ¼ÔÚÆÁÄ»ÉÏµÄÎïÀíÎ»ÖÃ³£Á¿
+// å®šä¹‰åœ°å›¾åœ¨å±å¹•ä¸Šçš„ç‰©ç†ä½ç½®å¸¸é‡
 const int MAP_UI_X = 1413;
 const int MAP_UI_Y = 149;
 const int MAP_UI_SIZE = 1093;
@@ -22,35 +23,51 @@ public:
     void setMap(const std::string& mapId, const std::string& mapName);
     void updateResources(const std::vector<std::string>& keys);
     void handleAltAction();
-    void setVisible(bool visible); // ¿ØÖÆ´°¿ÚÏÔÊ¾Òş²Ø
-    bool isVisible();              // »ñÈ¡µ±Ç°×´Ì¬
+    void toggleRouteVisible();
+    void resetRoute();
+    void setNearestPointAsRouteStart();
+    void toggleNearestPointExcluded();
+    void setVisible(bool visible); // æ§åˆ¶çª—å£æ˜¾ç¤ºéšè—
+    bool isVisible();              // è·å–å½“å‰çŠ¶æ€
     void setShowBackground(bool show);
 private:
+    struct Point;
+
     static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
     void paint(HDC hdc);
     void loadData();
     Gdiplus::Image* GetIcon(std::string type);
+    void rebuildRoute();
+    void drawRoute(Gdiplus::Graphics& g);
+    void drawRouteMarkerState(Gdiplus::Graphics& g, const Point& pt, int localX, int localY);
+    int findNearestPointToCursor(double maxDistance) const;
+    void invalidate();
 
     HWND m_hwnd;
     ULONG_PTR m_gdiToken;
 
     std::string m_currentMapId;
-    std::string m_currentMapName; // ĞŞ¸´£ºÌí¼Ó´ËÉùÃ÷
+    std::string m_currentMapName; // å½“å‰åœ°å›¾åç§°
     std::vector<std::string> m_activeKeys;
 
     struct Point {
+        std::string id;
         std::string type;
-        int absX; // ÆÁÄ»¾ø¶ÔÏñËØX
-        int absY; // ÆÁÄ»¾ø¶ÔÏñËØY
+        int absX; // å±å¹•ç»å¯¹åƒç´ X
+        int absY; // å±å¹•ç»å¯¹åƒç´ Y
     };
     std::vector<Point> m_points;
+    std::vector<size_t> m_routeOrder;
+    std::set<std::string> m_excludedPointIds;
+    std::string m_routeStartId;
     std::map<std::string, Gdiplus::Image*> m_iconCache;
     Gdiplus::Image* m_bgImg;
 
     int m_winX;
     int m_winY;
     int m_winSize;
-    bool m_showBackground = false; // Ä¬ÈÏÎªÏÔÊ¾
+    bool m_showBackground = false; // é»˜è®¤ä¸æ˜¾ç¤º
+    bool m_showRoute = false;
 };
 
 #endif

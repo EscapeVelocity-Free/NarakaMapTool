@@ -1,6 +1,7 @@
 .vs
 build/
 out/
+tools/
 
 # Conan / CMake 本地用户配置（由 conan install 自动生成，因机器而异）
 CMakeUserPresets.json

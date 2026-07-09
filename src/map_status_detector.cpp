@@ -1,15 +1,15 @@
-#include "map_status_detector.h"
+ï»¿#include "map_status_detector.h"
 #include <cmath>
 #include "config_manager.h"
 
 MapStatusDetector::MapStatusDetector(QObject* parent) : QObject(parent) {
     m_timer = new QTimer(this);
     connect(m_timer, &QTimer::timeout, this, &MapStatusDetector::processTick);
-    m_timer->start(30); // Ã¿30ms¼ì²âÒ»´Î
+    m_timer->start(30); // æ¯30msæ£€æµ‹ä¸€æ¬¡
 }
 
 void MapStatusDetector::processTick() {
-    // 1. ¼ì²âµØÍ¼×´Ì¬
+    // 1. æ£€æµ‹åœ°å›¾çŠ¶æ€
     bool currentWhite = isPixelAreaWhite(2);
     if (currentWhite) {
         m_whiteCount++; m_blackCount = 0;
@@ -26,14 +26,45 @@ void MapStatusDetector::processTick() {
         }
     }
 
-    // 2. ¼ì²â Alt °´¼ü (½öÔÚµØÍ¼´ò¿ªÊ±ÓĞĞ§)
+    // 2. æ£€æµ‹åœ°å›¾æ‰“å¼€æ—¶æœ‰æ•ˆçš„å¿«æ·é”®
     if (m_isMapOpen) {
-        bool altDown = (GetAsyncKeyState(VK_LMENU) & 0x8000);
-        if (altDown && !m_altWasPressed) {
+        if (isKeyPressedOnce(VK_LMENU, m_altWasPressed)) {
             emit altTriggered();
         }
-        m_altWasPressed = altDown;
+
+        if (isKeyPressedOnce(VK_SCROLL, m_routeToggleWasPressed)) {
+            emit routeToggleTriggered();
+        }
+        if (isKeyPressedOnce(VK_PAUSE, m_routeStartWasPressed)) {
+            emit routeStartTriggered();
+        }
+        if (isKeyPressedOnce(VK_INSERT, m_routeExcludeWasPressed)) {
+            emit routeExcludeTriggered();
+        }
+        if (isKeyPressedOnce(VK_HOME, m_routeResetWasPressed)) {
+            emit routeResetTriggered();
+        }
     }
+    else {
+        clearRouteKeyStates();
+    }
+}
+
+bool MapStatusDetector::isKeyPressedOnce(int vk, bool& wasPressed) {
+    SHORT state = GetAsyncKeyState(vk);
+    bool down = (state & 0x8000) != 0;
+    bool pressedSinceLastCall = (state & 0x0001) != 0;
+    bool triggered = pressedSinceLastCall || (down && !wasPressed);
+    wasPressed = down;
+    return triggered;
+}
+
+void MapStatusDetector::clearRouteKeyStates() {
+    m_altWasPressed = (GetAsyncKeyState(VK_LMENU) & 0x8000) != 0;
+    m_routeToggleWasPressed = (GetAsyncKeyState(VK_SCROLL) & 0x8000) != 0;
+    m_routeStartWasPressed = (GetAsyncKeyState(VK_PAUSE) & 0x8000) != 0;
+    m_routeExcludeWasPressed = (GetAsyncKeyState(VK_INSERT) & 0x8000) != 0;
+    m_routeResetWasPressed = (GetAsyncKeyState(VK_HOME) & 0x8000) != 0;
 }
 
 bool MapStatusDetector::isPixelAreaWhite(int radius) {
