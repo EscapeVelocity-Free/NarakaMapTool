@@ -36,6 +36,21 @@ jobs:
           conan profile detect --force
           conan install . --output-folder=build --build=missing -s build_type=Release -s compiler.runtime=static
 
+      - name: Register Conan CMake presets
+        shell: pwsh
+        run: |
+          @'
+          {
+            "version": 4,
+            "vendor": {
+              "conan": {}
+            },
+            "include": [
+              "build/build/generators/CMakePresets.json"
+            ]
+          }
+          '@ | Set-Content -LiteralPath CMakeUserPresets.json -Encoding utf8NoBOM
+
       - name: Configure and build
         shell: pwsh
         run: |
