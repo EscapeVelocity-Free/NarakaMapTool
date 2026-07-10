@@ -578,7 +578,7 @@ void OverlayWindow::paint(HDC hdc) {
     }
 
     // 4. 绘制红边框
-    Pen redPen(Color::Red, 4);
+    Pen redPen(Color::Red, 2);
     g.DrawRectangle(&redPen, 1, 1, m_winSize - 2, m_winSize - 2);
 
     // 贴图到屏幕
