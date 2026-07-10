@@ -1,7 +1,12 @@
-#pragma once
-#include <QWidget>
+Ôªø#pragma once
+
+#include <QAbstractButton>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QFrame>
+#include <QPushButton>
+#include <QWidget>
+
 #include <map>
 #include <string>
 #include <vector>
@@ -12,14 +17,36 @@ public:
     explicit ControlPanel(QWidget* parent = nullptr);
 
 signals:
-    // «–ªªµÿÕº–≈∫≈£∫∑¢ÀÕ (mapId, mapName)
+    // ÂàáÊç¢Âú∞Âõæ‰ø°Âè∑ÔºåÂèÇÊï∞‰∏∫ (mapId, mapName)
     void mapChanged(const std::string& mapId, const std::string& mapName);
-    // ◊ ‘¥π¥—°–≈∫≈
+    // ËµÑÊ∫êÂãæÈÄâ‰ø°Âè∑
     void selectionChanged(const std::vector<std::string>& selectedKeys);
-
     void toggleBackground(bool show);
+
 private:
+    struct ResourceItem;
+    struct ResourceGroup;
+    struct ResourceBinding {
+        std::string key;
+        bool riftOnly;
+    };
+
+    static std::vector<ResourceGroup> buildResourceGroups();
+    void setupWindow();
+    void setupStyle();
+    QFrame* createHeaderCard();
+    QFrame* createResourceSection(const ResourceGroup& group);
+    QPushButton* createResourceChip(const ResourceItem& item, bool riftOnly);
+    QPushButton* createCommandButton(const QString& text, const QString& objectName);
+    void applyCardShadow(QFrame* card);
+    void connectActions(QPushButton* selectAllButton, QPushButton* clearAllButton, QCheckBox* showBackgroundBox);
+    bool isRiftMapSelected() const;
+    bool isResourceAvailable(const ResourceBinding& binding) const;
+    void updateRiftSectionVisibility();
+    void setAllResourcesChecked(bool checked);
     void notifySelectionChanged();
-    std::map<QCheckBox*, std::string> m_boxMap;
-    QComboBox* m_mapCombo;
+
+    std::map<QAbstractButton*, ResourceBinding> m_resourceButtons;
+    std::vector<QFrame*> m_riftOnlySections;
+    QComboBox* m_mapCombo = nullptr;
 };

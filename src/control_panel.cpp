@@ -1,252 +1,530 @@
-#include "control_panel.h"
+ï»¿#include "control_panel.h"
+
+#include <QAbstractButton>
 #include <QCheckBox>
+#include <QColor>
 #include <QGridLayout>
-#include <QVBoxLayout>
+#include <QGraphicsDropShadowEffect>
 #include <QHBoxLayout>
-#include <QPushButton>
 #include <QLabel>
-#include <QTimer>
-#include <QGroupBox>
 #include <QScrollArea>
-#include <QSlider>
+#include <QSizePolicy>
+#include <QTimer>
+#include <QVBoxLayout>
+
 #include <set>
-#include "config_manager.h"
 
 #pragma execution_character_set("utf-8")
 
-ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent) {
-    // 1. ´°¿Ú»ù´¡ÉèÖÃ
-    setWindowTitle(QString::fromUtf8("ÓÀ½ÙÎÞ¼ä×ÊÔ´µØÍ¼¿ØÖÆÖÐÐÄ"));
-    setMinimumSize(1100, 650); // ÉèÖÃ½Ï´óµÄ³õÊ¼³ß´ç£¬ÏÔµÃ´óÆø
+struct ControlPanel::ResourceItem {
+    const char* name;
+    const char* key;
+};
 
-    // 2. È«¾ÖÑùÊ½ÃÀ»¯ (QSS)
-    this->setStyleSheet(R"(
-        QWidget { 
-            background-color: #1e1e1e; 
-            color: #dcdcdc; 
-            font-family: 'Microsoft YaHei'; 
-            font-size: 14px; 
+struct ControlPanel::ResourceGroup {
+    const char* title;
+    const char* subtitle;
+    int columns;
+    bool riftOnly;
+    std::vector<ResourceItem> items;
+};
+
+namespace {
+const std::set<std::string>& DefaultResourceKeys() {
+    static const std::set<std::string> keys = {
+        "firefly", "wishingWell", "miniShrine", "goldenToad", "flyingTarget", "fireflyCage"
+    };
+    return keys;
+}
+
+}
+
+ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent) {
+    setupWindow();
+    setupStyle();
+
+    auto* rootLayout = new QVBoxLayout(this);
+    rootLayout->setContentsMargins(24, 18, 24, 18);
+    rootLayout->setSpacing(12);
+
+    rootLayout->addWidget(createHeaderCard());
+
+    auto* scrollArea = new QScrollArea(this);
+    scrollArea->setObjectName("contentScroll");
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setFrameShape(QFrame::NoFrame);
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    auto* content = new QWidget(scrollArea);
+    content->setObjectName("contentCanvas");
+    auto* contentLayout = new QVBoxLayout(content);
+    contentLayout->setContentsMargins(6, 6, 6, 6);
+    contentLayout->setSpacing(12);
+
+    for (const auto& group : buildResourceGroups()) {
+        contentLayout->addWidget(createResourceSection(group));
+    }
+    contentLayout->addStretch();
+
+    scrollArea->setWidget(content);
+    rootLayout->addWidget(scrollArea, 1);
+
+    updateRiftSectionVisibility();
+    QTimer::singleShot(100, this, &ControlPanel::notifySelectionChanged);
+}
+
+std::vector<ControlPanel::ResourceGroup> ControlPanel::buildResourceGroups() {
+    return {
+        {
+            "å¸¸ç”¨æ¶ˆè€— Â· é‡‡é›†",
+            "é«˜é¢‘è·¯çº¿ç‚¹ï¼Œé€‚åˆæ—¥å¸¸è·‘å›¾",
+            7,
+            false,
+            {
+                {"è¤ç«è™«", "firefly"}, {"è®¸æ„¿äº•", "wishingWell"}, {"å°åœŸåœ°", "miniShrine"},
+                {"é‡‘èŸ¾", "goldenToad"}, {"é¸Ÿé¶", "flyingTarget"}, {"è¤ç«ç¬¼", "fireflyCage"},
+                {"æ¢¨", "pear"}, {"åˆºæ¢¨", "pricklyPear"}, {"è›‡çš®æžœ", "salak"},
+                {"è’²å…¬è‹±", "dandelion"}, {"é”¦é²¤", "koi"}
+            }
+        },
+        {
+            "ä»»åŠ¡ Â· æŒ‘æˆ˜",
+            "å·è½´ã€æ‚¬èµã€åœ°è„‰ç­‰å…³é”®äº¤äº’",
+            5,
+            false,
+            {
+                {"ä»»åŠ¡(å·è½´)", "questSerialCache"}, {"ä»»åŠ¡2", "questCache"}, {"ä»»åŠ¡åœŸåœ°", "questShrine"},
+                {"ä»»åŠ¡é’Ÿ", "questBell"}, {"æ‚¬èµ", "bounty"}, {"å«é˜µ", "reverseBounty"}, {"åœ°è„‰ä»ª", "strongPoint"}
+            }
+        },
+        {
+            "é‡è¦è®¾æ–½",
+            "å•†åº—ã€è¿”é­‚å°ã€æ´žç©´ä¸ŽåŠŸèƒ½è®¾æ–½",
+            7,
+            false,
+            {
+                {"å•†åº—", "riftDealer"}, {"è¿”é­‚å°", "soulAltar"}, {"æ­¦å™¨æž¶", "weaponRack"},
+                {"å®åº“", "treasureCave"}, {"å¥¥ä¹‰å°å°", "forbiddenSeal"}, {"å›žé˜³é•œ", "gateOfYang"},
+                {"é£ŸäººèŠ±", "carnivorousYam"}, {"é›ªèŽ²", "snowLotus"}, {"æ³‰æº", "springSource"},
+                {"è´ºå…°è‰º", "helanArt"}
+            }
+        },
+        {
+            "å…¶ä»–",
+            "åœ°å›¾ä¸Šçš„è¡¥å……èµ„æºç‚¹",
+            7,
+            false,
+            {
+                {"é‡‘å †", "gold"}, {"ç»¿å †", "green"}, {"æ¼‚æµ®å †", "floatingPile"},
+                {"é’Ÿ", "bell"}, {"æ”»åŸŽå¼©", "ballista"}, {"æ»´æ»´æ‰“è½¦", "soaringArm"},
+                {"æ•å…½å¤¹", "bearTrap"}, {"é‡Žç”ŸåŠ¨ç‰©", "wildlife"}, {"çƒ¤ç«", "bonfire"},
+                {"ç–—æ„ˆä¹‹æ ‘", "healingTree"}, {"è€é¼ ", "rat"}, {"åœŸåœ°åº™", "prayerShrine"},
+                {"é“œé’±", "treasureCoin"}
+            }
+        },
+        {
+            "æ‘¸é‡‘",
+            "è£‚éš™å®ç®±ã€æœºå…³ä¸Žæ”¶è—å®¹å™¨",
+            7,
+            true,
+            {
+                {"åšç«ç®±Â·å²è¯—", "riftChestEpic"},
+                {"åšç«ç®±Â·å²è¯—(å¿…ä¸­)", "riftChestEpicGuaranteed"},
+                {"åšç«ç®±Â·ä¼ è¯´", "riftChestLegendary"},
+                {"åšç«ç®±Â·å²è¯—(æ²™)", "riftChestEpicSand"},
+                {"åšç«ç®±Â·å²è¯—(é›ª)", "riftChestEpicSnow"},
+                {"åšç«ç®±Â·å²è¯—(é›·)", "riftChestEpicThunder"},
+                {"åšç«ç®±Â·ä¼ è¯´(é›·)", "riftChestLegendaryThunder"},
+                {"æš—é—¨", "riftSecret"},
+                {"çŸ¿è½¦", "riftMinecart"},
+                {"å®ˆå«", "riftQuestGuard"},
+                {"æ°´äº•", "riftWaterWell"},
+                {"é—¸é—¨", "riftGateOfYang"},
+                {"çŒŽæ´ž", "riftShovel"},
+                {"æ®ç‚¹", "riftStronghold"},
+                {"æ®ç‚¹(å°Boss)", "riftStrongholdMiniBoss"},
+                {"æ®ç‚¹(Boss)", "riftStrongholdBoss"},
+                {"éª°å­", "riftDice"},
+                {"è½¿å­", "riftSedanChair"},
+                {"é‡‘é—ç‰©", "riftGoldRelic"},
+                {"æ­¦å™¨ç®±", "riftWeaponBox"},
+                {"æ°”æµ", "riftAirCurrent"},
+                {"å°ç¯®", "riftSmallHamper"},
+                {"å¤§ç¯®", "riftBigHamper"},
+                {"å­˜é’±ç½", "riftPiggyBank"},
+                {"çŸ³ç¢‘Â·è§£è¯»", "riftSteleDecipher"},
+                {"æ´žé’¥åŒ™", "riftCaveKey"},
+                {"é»‘ç„°å…µ", "riftBlackFlameSoldier"},
+                {"å¤§è¯æŸœ", "riftLargeMedicineCabinet"},
+                {"ä¿¡ä»¶", "riftLetter"},
+                {"å°å¦†ç›’", "riftSmallMakeupBox"},
+                {"å¤§æ”¶é›†ç®±", "riftBigCollectionContainer"},
+                {"å¤§æ”¶é›†æŸœ", "riftLargeCollectionCabinet"},
+                {"å¤§æ‚ç‰©æŸœ", "riftBigUtilityCabinet"},
+                {"å¤§æ‚è´§é“º", "riftLargeGroceryStore"},
+                {"å¤§æ”¶é›†é“º", "riftLargeCollectionShop"}
+            }
         }
-        QGroupBox {
-            border: 1px solid #3a3a3a;
-            border-radius: 6px;
-            margin-top: 15px;
-            font-weight: bold;
-            color: #a0a0a0;
-            background-color: #252526;
+    };
+}
+
+void ControlPanel::setupWindow() {
+    setWindowTitle(QString::fromUtf8("æ°¸åŠ«æ— é—´èµ„æºåœ°å›¾æŽ§åˆ¶ä¸­å¿ƒ"));
+    setMinimumSize(1100, 680);
+    resize(1280, 840);
+}
+
+void ControlPanel::setupStyle() {
+    setStyleSheet(R"(
+        QWidget {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 #f7f9fd, stop:0.45 #eef3fb, stop:1 #fbfbfd);
+            color: #080b12;
+            font-family: "HarmonyOS Sans SC", "Microsoft YaHei UI", "Microsoft YaHei";
+            font-size: 13px;
+            font-weight: 600;
         }
-        QGroupBox::title {
-            subcontrol-origin: margin;
-            left: 10px;
-            padding: 0 5px;
+        QFrame#headerCard {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 #ffffff, stop:0.58 #f6f9ff, stop:1 #edf5ff);
+            border: 1px solid #d8dfed;
+            border-radius: 20px;
+        }
+        QFrame#sectionCard {
+            background: rgba(255, 255, 255, 246);
+            border: 1px solid #dfe4ee;
+            border-radius: 18px;
+        }
+        QLabel#heroKicker {
+            background: #e8f1ff;
+            color: #0057d9;
+            border: 1px solid #c9ddff;
+            border-radius: 8px;
+            padding: 2px 8px;
+            font-size: 10px;
+            font-weight: 900;
+        }
+        QLabel#appTitle {
+            background: transparent;
+            color: #06080d;
+            font-size: 26px;
+            font-weight: 900;
+        }
+        QLabel#appSubtitle, QLabel#sectionSubtitle, QLabel#fieldLabel {
+            background: transparent;
+            color: #4d5563;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        QLabel#sectionTitle {
+            background: transparent;
+            color: #070a11;
+            font-size: 16px;
+            font-weight: 900;
+        }
+        QComboBox {
+            min-width: 190px;
+            min-height: 34px;
+            padding: 4px 32px 4px 14px;
+            border: 1px solid #c8cfdd;
+            border-radius: 12px;
+            background: #ffffff;
+            color: #080b12;
+            font-weight: 800;
+        }
+        QComboBox:hover {
+            border-color: #9db7e8;
+            background: #fbfdff;
+        }
+        QComboBox::drop-down {
+            border: 0;
+            width: 32px;
         }
         QCheckBox {
             spacing: 8px;
-            padding: 5px;
+            color: #080b12;
+        }
+        QPushButton#resourceChip {
+            min-height: 32px;
+            max-height: 32px;
+            padding: 4px 12px;
+            border: 1px solid #d9deea;
+            border-radius: 11px;
+            background: #ffffff;
+            color: #0a0d14;
+            font-size: 12px;
+            font-weight: 700;
+            text-align: left;
+        }
+        QPushButton#resourceChip:hover {
+            border-color: #94b8ff;
+            background: #f5f9ff;
+        }
+        QPushButton#resourceChip:checked {
+            border-color: #006bff;
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 #0a84ff, stop:1 #0057d9);
+            color: #ffffff;
+        }
+        QPushButton#resourceChip:checked:hover {
+            border-color: #0057d9;
+            background: #0068e6;
         }
         QCheckBox::indicator {
             width: 18px;
             height: 18px;
-            border: 1px solid #555;
-            border-radius: 3px;
+            border-radius: 7px;
+            border: 1px solid #bbc4d2;
+            background: #ffffff;
         }
-        QCheckBox::indicator:unchecked { background-color: #333; }
-        QCheckBox::indicator:unchecked:hover { border: 1px solid #8e2a2b; }
-        QCheckBox::indicator:checked { background-color: #8e2a2b; border: 1px solid #ff4d4d; }
-        
-        QComboBox {
-            background-color: #333;
-            border: 1px solid #555;
-            border-radius: 4px;
-            padding: 5px 15px;
-            min-width: 120px;
-            color: white;
+        QCheckBox::indicator:checked {
+            border-color: #ffffff;
+            background: #ffffff;
+        }
+        QCheckBox#switchCheck::indicator {
+            width: 36px;
+            height: 20px;
+            border-radius: 10px;
+            border: 1px solid #bcc6d4;
+            background: #d9dee8;
+        }
+        QCheckBox#switchCheck::indicator:checked {
+            border-color: #34c759;
+            background: #34c759;
         }
         QPushButton {
-            background-color: #3a3a3a;
-            border: 1px solid #555;
+            min-height: 34px;
+            padding: 5px 14px;
+            border-radius: 11px;
+            font-weight: 900;
+        }
+        QPushButton#primaryButton {
+            color: #ffffff;
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 #0a84ff, stop:1 #0061ff);
+            border: 1px solid #0057d9;
+        }
+        QPushButton#primaryButton:hover {
+            background: #0057d9;
+        }
+        QPushButton#secondaryButton {
+            color: #0a0d14;
+            background: #ffffff;
+            border: 1px solid #c8cfdd;
+        }
+        QPushButton#secondaryButton:hover {
+            background: #f4f7fb;
+            border-color: #9db7e8;
+        }
+        QScrollArea#contentScroll, QWidget#contentCanvas {
+            background: transparent;
+            border: 0;
+        }
+        QScrollBar:vertical {
+            width: 8px;
+            background: transparent;
+        }
+        QScrollBar::handle:vertical {
+            min-height: 48px;
             border-radius: 4px;
-            padding: 6px 20px;
-            color: #efefef;
+            background: #aeb8c8;
         }
-        QPushButton:hover {
-            background-color: #4a4a4a;
-            border: 1px solid #8e2a2b;
-        }
-        QPushButton#actionBtn {
-            background-color: #8e2a2b;
-            border: 1px solid #a00000;
-            font-weight: bold;
-        }
-        QPushButton#actionBtn:hover {
-            background-color: #a03536;
+        QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+            height: 0;
         }
     )");
+}
 
-    auto* mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(20, 20, 20, 20);
-    mainLayout->setSpacing(15);
+QFrame* ControlPanel::createHeaderCard() {
+    auto* card = new QFrame(this);
+    card->setObjectName("headerCard");
+    applyCardShadow(card);
+    auto* layout = new QHBoxLayout(card);
+    layout->setContentsMargins(22, 16, 22, 16);
+    layout->setSpacing(18);
 
-    // --- 3. ¶¥²¿±êÌâÓë¹¤¾ßÀ¸ ---
-    auto* headerLayout = new QHBoxLayout();
+    auto* titleBlock = new QVBoxLayout();
+    titleBlock->setSpacing(2);
 
-    QLabel* titleLabel = new QLabel(QString::fromUtf8("µØÍ¼×ÊÔ´¸¨Öú - ¿ØÖÆÃæ°å"));
-    titleLabel->setStyleSheet("font-size: 20px; color: #ffffff; font-weight: bold;");
+    auto* kicker = new QLabel(QString::fromUtf8("NARAKA MAP TOOL"), card);
+    kicker->setObjectName("heroKicker");
+    kicker->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-    m_mapCombo = new QComboBox(this);
-    m_mapCombo->addItem(QString::fromUtf8("¾Û¿ßÖÝ"), "0");
-    m_mapCombo->addItem(QString::fromUtf8("»ðÂÞ¹ú"), "1");
-    m_mapCombo->addItem(QString::fromUtf8("ÁúÒþ¶´Ìì"), "2");
-    m_mapCombo->addItem(QString::fromUtf8("·çÆð»ðÂÞ"), "3");
-    m_mapCombo->addItem(QString::fromUtf8("Âú½­ºì"), "4");
-    m_mapCombo->addItem(QString::fromUtf8("\xE5\xAE\x9B\xE6\xB8\xA0"), "5");
+    auto* title = new QLabel(QString::fromUtf8("åœ°å›¾èµ„æºè¾…åŠ©"), card);
+    title->setObjectName("appTitle");
+    auto* subtitle = new QLabel(QString::fromUtf8("é€‰æ‹©åœ°å›¾ä¸Žèµ„æºç±»åž‹ï¼Œè¦†ç›–å±‚ä¼šéšæ¸¸æˆåœ°å›¾è‡ªåŠ¨æ˜¾ç¤ºã€‚"), card);
+    subtitle->setObjectName("appSubtitle");
+    titleBlock->addWidget(kicker);
+    titleBlock->addWidget(title);
+    titleBlock->addWidget(subtitle);
+
+    layout->addLayout(titleBlock, 1);
+
+    auto* mapLabel = new QLabel(QString::fromUtf8("å½“å‰åœ°å›¾"), card);
+    mapLabel->setObjectName("fieldLabel");
+    layout->addWidget(mapLabel);
+
+    m_mapCombo = new QComboBox(card);
+    m_mapCombo->addItem(QString::fromUtf8("èšçªŸå·ž"), "0");
+    m_mapCombo->addItem(QString::fromUtf8("ç«ç½—å›½"), "1");
+    m_mapCombo->addItem(QString::fromUtf8("é¾™éšæ´žå¤©"), "2");
+    m_mapCombo->addItem(QString::fromUtf8("é£Žèµ·ç«ç½—"), "3");
+    m_mapCombo->addItem(QString::fromUtf8("æ»¡æ±Ÿçº¢"), "4");
+    m_mapCombo->addItem(QString::fromUtf8("å®›æ¸ "), "5");
     m_mapCombo->setCurrentIndex(2);
+    layout->addWidget(m_mapCombo);
 
-    headerLayout->addWidget(titleLabel);
-    headerLayout->addStretch();
-    headerLayout->addWidget(new QLabel(QString::fromUtf8("µ±Ç°µØÍ¼:")));
-    headerLayout->addWidget(m_mapCombo);
+    auto* showBackgroundBox = new QCheckBox(QString::fromUtf8("èƒŒæ™¯åœ°å›¾"), card);
+    showBackgroundBox->setObjectName("switchCheck");
+    showBackgroundBox->setChecked(false);
+    layout->addWidget(showBackgroundBox);
 
-    // ÔÚ¹¹Ôìº¯Êý headerLayout ²¼¾Ö²¿·Ö£º
-    headerLayout->addSpacing(20);
-    QCheckBox* cbShowBg = new QCheckBox(QString::fromUtf8("ÏÔÊ¾±³¾°µØÍ¼"), this);
-    cbShowBg->setChecked(false); // Ä¬ÈÏ¹Ø±Õ
-    headerLayout->addWidget(cbShowBg);
+    auto* selectAllButton = createCommandButton(QString::fromUtf8("å…¨éƒ¨æ˜¾ç¤º"), "primaryButton");
+    auto* clearAllButton = createCommandButton(QString::fromUtf8("å…¨éƒ¨éšè—"), "secondaryButton");
+    layout->addWidget(selectAllButton);
+    layout->addWidget(clearAllButton);
 
-    // °ó¶¨¹´Ñ¡ÊÂ¼þ (¼ÙÉèÐÅºÅÃûÎª toggleBackground)
-    connect(cbShowBg, &QCheckBox::stateChanged, [this](int state) {
-        emit toggleBackground(state == Qt::Checked);
-        });
+    connectActions(selectAllButton, clearAllButton, showBackgroundBox);
+    return card;
+}
 
-    headerLayout->addSpacing(20);
-    auto* btnSelectAll = new QPushButton(QString::fromUtf8("È«²¿ÏÔÊ¾"), this);
-    auto* btnClearAll = new QPushButton(QString::fromUtf8("È«²¿Òþ²Ø"), this);
-    btnSelectAll->setObjectName("actionBtn");
+QFrame* ControlPanel::createResourceSection(const ResourceGroup& group) {
+    auto* card = new QFrame(this);
+    card->setObjectName("sectionCard");
+    applyCardShadow(card);
+    if (group.riftOnly) {
+        m_riftOnlySections.push_back(card);
+    }
 
-    headerLayout->addWidget(btnSelectAll);
-    headerLayout->addWidget(btnClearAll);
-    mainLayout->addLayout(headerLayout);
+    auto* layout = new QVBoxLayout(card);
+    layout->setContentsMargins(18, 14, 18, 16);
+    layout->setSpacing(10);
 
-    // --- 4. ×ÊÔ´·Ö×éÂß¼­ ---
-    struct ResourceItem { const char* name; const char* key; };
+    auto* header = new QHBoxLayout();
+    header->setSpacing(10);
 
-    auto createGroup = [&](QString title, std::vector<ResourceItem> groupItems) {
-        QGroupBox* groupBox = new QGroupBox(title, this);
-        QGridLayout* gLayout = new QGridLayout(groupBox);
-        gLayout->setContentsMargins(15, 20, 15, 15);
-        gLayout->setSpacing(10);
+    auto* title = new QLabel(QString::fromUtf8(group.title), card);
+    title->setObjectName("sectionTitle");
+    auto* subtitle = new QLabel(QString::fromUtf8(group.subtitle), card);
+    subtitle->setObjectName("sectionSubtitle");
+    header->addWidget(title);
+    header->addWidget(subtitle);
+    header->addStretch();
+    layout->addLayout(header);
 
-        int row = 0, col = 0;
-        int maxCols = 5; // Ã¿×éÄÚ²¿×î¶à5ÁÐ
+    auto* grid = new QGridLayout();
+    grid->setContentsMargins(0, 0, 0, 0);
+    grid->setHorizontalSpacing(9);
+    grid->setVerticalSpacing(9);
 
-        for (const auto& item : groupItems) {
-            auto* cb = new QCheckBox(QString::fromUtf8(item.name), this);
-            m_boxMap[cb] = item.key;
-            gLayout->addWidget(cb, row, col);
-
-            // Ä¬ÈÏ¹´Ñ¡Âß¼­
-            static std::set<std::string> defaultKeys = { "firefly", "wishingWell", "miniShrine", "goldenToad", "flyingTarget", "fireflyCage" };
-            if (defaultKeys.count(item.key)) cb->setChecked(true);
-
-            connect(cb, &QCheckBox::stateChanged, this, &ControlPanel::notifySelectionChanged);
-
-            col++;
-            if (col >= maxCols) { col = 0; row++; }
+    int row = 0;
+    int col = 0;
+    for (const auto& item : group.items) {
+        grid->addWidget(createResourceChip(item, group.riftOnly), row, col);
+        if (++col >= group.columns) {
+            col = 0;
+            ++row;
         }
-        return groupBox;
-        };
+    }
 
-    // --- ·Ö×é¶¨Òå ---
-    mainLayout->addWidget(createGroup(QString::fromUtf8("³£ÓÃÏûºÄ & ²É¼¯"), {
-        {"Ó©»ð³æ", "firefly"}, {"ÐíÔ¸¾®", "wishingWell"}, {"Ð¡ÍÁµØ", "miniShrine"},
-        {"½ðó¸", "goldenToad"}, {"Äñ°Ð", "flyingTarget"}, {"Ó©»ðÁý", "fireflyCage"},
-        {"Àæ", "pear"}, {"´ÌÀæ", "pricklyPear"}, {"ÉßÆ¤¹û", "salak"}, {"ÆÑ¹«Ó¢", "dandelion"}, {"½õÀð", "koi"}
-        }));
+    for (int i = 0; i < group.columns; ++i) {
+        grid->setColumnStretch(i, 1);
+    }
 
-    mainLayout->addWidget(createGroup(QString::fromUtf8("ÈÎÎñ & ÌôÕ½"), {
-        {"ÈÎÎñ(¾íÖá)", "questSerialCache"}, {"ÈÎÎñ2", "questCache"}, {"ÈÎÎñÍÁµØ", "questShrine"},
-        {"ÈÎÎñÖÓ", "questBell"}, {"ÐüÉÍ", "bounty"}, {"½ÐÕó", "reverseBounty"}, {"µØÂöÒÇ", "strongPoint"}
-        }));
+    layout->addLayout(grid);
+    return card;
+}
 
-    auto* bottomRow = new QHBoxLayout();
-    bottomRow->addWidget(createGroup(QString::fromUtf8("ÖØÒªÉèÊ©"), {
-        {"ÉÌµê", "riftDealer"}, {"·´»êÌ¨", "soulAltar"}, {"ÎäÆ÷¼Ü", "weaponRack"},
-        {"±¦¿â", "treasureCave"}, {"°ÂÒå·âÓ¡", "forbiddenSeal"}, {"»ØÑô¾µ", "gateOfYang"},
-        {"Ê³ÈË»¨", "carnivorousYam"}, {"Ñ©Á«", "snowLotus"}, {"ÈªÔ´", "springSource"},
-        {"\xE8\xB4\xBA\xE5\x85\xB0\xE8\x89\xBA", "helanArt"}
-        }));
+QPushButton* ControlPanel::createResourceChip(const ResourceItem& item, bool riftOnly) {
+    auto* button = new QPushButton(QString::fromUtf8(item.name), this);
+    button->setObjectName("resourceChip");
+    button->setCheckable(true);
+    button->setCursor(Qt::PointingHandCursor);
+    button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    m_resourceButtons[button] = ResourceBinding{item.key, riftOnly};
 
-    bottomRow->addWidget(createGroup(QString::fromUtf8("ÆäËû"), {
-        {"½ð¶Ñ", "gold"}, {"ÂÌ¶Ñ", "green"}, {"Æ¯¸¡¶Ñ", "floatingPile"},
-        {"ÖÓ", "bell"}, {"¹¥³Çåó", "ballista"}, {"µÎµÎ´ò³µ", "soaringArm"},
-        {"²¶ÊÞ¼Ð", "bearTrap"}, {"Ò°Éú¶¯Îï", "wildlife"}, {"¿¾»ð", "bonfire"},
-        {"ÁÆÓúÖ®Ê÷", "healingTree"}, {"ÀÏÊó", "rat"}, {"ÍÁµØÃí", "prayerShrine"}, {"Í­Ç®", "treasureCoin"}
-        }));
-    mainLayout->addLayout(bottomRow);
+    if (DefaultResourceKeys().count(item.key)) {
+        button->setChecked(true);
+    }
 
-    // --- 5. ÐÅºÅ´¦Àí ---
-    connect(m_mapCombo, &QComboBox::currentIndexChanged, [this](int index) {
+    connect(button, &QPushButton::toggled, this, &ControlPanel::notifySelectionChanged);
+    return button;
+}
+
+QPushButton* ControlPanel::createCommandButton(const QString& text, const QString& objectName) {
+    auto* button = new QPushButton(text, this);
+    button->setObjectName(objectName);
+    return button;
+}
+
+void ControlPanel::applyCardShadow(QFrame* card) {
+    auto* shadow = new QGraphicsDropShadowEffect(card);
+    shadow->setBlurRadius(24);
+    shadow->setOffset(0, 6);
+    shadow->setColor(QColor(25, 33, 52, 28));
+    card->setGraphicsEffect(shadow);
+}
+
+void ControlPanel::connectActions(QPushButton* selectAllButton, QPushButton* clearAllButton, QCheckBox* showBackgroundBox) {
+    connect(showBackgroundBox, &QCheckBox::stateChanged, [this](int state) {
+        emit toggleBackground(state == Qt::Checked);
+    });
+
+    connect(m_mapCombo, &QComboBox::currentIndexChanged, [this](int) {
         emit mapChanged(m_mapCombo->currentData().toString().toStdString(), m_mapCombo->currentText().toStdString());
+        updateRiftSectionVisibility();
         notifySelectionChanged();
-        });
+    });
 
-    connect(btnSelectAll, &QPushButton::clicked, [this]() {
-        for (auto const& [box, key] : m_boxMap) { box->blockSignals(true); box->setChecked(true); box->blockSignals(false); }
-        notifySelectionChanged();
-        });
+    connect(selectAllButton, &QPushButton::clicked, [this]() {
+        setAllResourcesChecked(true);
+    });
 
-    connect(btnClearAll, &QPushButton::clicked, [this]() {
-        for (auto const& [box, key] : m_boxMap) { box->blockSignals(true); box->setChecked(false); box->blockSignals(false); }
-        notifySelectionChanged();
-        });
+    connect(clearAllButton, &QPushButton::clicked, [this]() {
+        setAllResourcesChecked(false);
+    });
+}
 
-    mainLayout->addWidget(createGroup(QString::fromUtf8("Ãþ½ð"), {
-        {"²©»ðÏä¡¤Ê·Ê«", "riftChestEpic"},
-        {"²©»ðÏä¡¤Ê·Ê«(±Ø³ö)", "riftChestEpicGuaranteed"},
-        {"²©»ðÏä¡¤´«Ëµ", "riftChestLegendary"},
-        {"²©»ðÏä¡¤Ê·Ê«(É³)", "riftChestEpicSand"},
-        {"²©»ðÏä¡¤Ê·Ê«(Ñ©)", "riftChestEpicSnow"},
-        {"²©»ðÏä¡¤Ê·Ê«(À×)", "riftChestEpicThunder"},
-        {"²©»ðÏä¡¤´«Ëµ(À×)", "riftChestLegendaryThunder"},
-        {"°µÃÅ", "riftSecret"},
-        {"¿ó³µ", "riftMinecart"},
-        {"ÊØÎÀ", "riftQuestGuard"},
-        {"Ë®¾®", "riftWaterWell"},
-        {"Õ¢ÃÅ", "riftGateOfYang"},
-        {"ÁÔ¶´", "riftShovel"},
-        {"¾Ýµã", "riftStronghold"},
-        {"¾Ýµã(Ð¡Boss)", "riftStrongholdMiniBoss"},
-        {"¾Ýµã(Boss)", "riftStrongholdBoss"},
-        {"÷»×Ó", "riftDice"},
-        {"½Î×Ó", "riftSedanChair"},
-        {"½ðÒÅÎï", "riftGoldRelic"},
-        {"ÎäÆ÷Ïä", "riftWeaponBox"},
-        {"ÆøÁ÷", "riftAirCurrent"},
-        {"Ð¡Àº", "riftSmallHamper"},
-        {"´óÀº", "riftBigHamper"},
-        {"´æÇ®¹Þ", "riftPiggyBank"},
-        {"Ê¯±®¡¤½â¶Á", "riftSteleDecipher"},
-        {"¶´Ô¿³×", "riftCaveKey"},
-        {"ºÚÑæ±ø", "riftBlackFlameSoldier"},
-        {"´óÒ©¹ñ", "riftLargeMedicineCabinet"},
-        {"ÐÅ¼þ", "riftLetter"},
-        {"Ð¡×±ºÐ", "riftSmallMakeupBox"},
-        {"´óÊÕ¼¯Ïä", "riftBigCollectionContainer"},
-        {"´óÊÕ¼¯¹ñ", "riftLargeCollectionCabinet"},
-        {"´óÔÓÎï¹ñ", "riftBigUtilityCabinet"},
-        {"´óÔÓ»õÆÌ", "riftLargeGroceryStore"},
-        {"´óÊÕ¼¯ÆÌ", "riftLargeCollectionShop"},
-        }));
+bool ControlPanel::isRiftMapSelected() const {
+    if (!m_mapCombo) {
+        return false;
+    }
 
-    mainLayout->addStretch(); // µ×²¿³Å¿ª
+    const QString mapId = m_mapCombo->currentData().toString();
+    return mapId == "3" || mapId == "4";
+}
 
-    QTimer::singleShot(100, this, &ControlPanel::notifySelectionChanged);
+bool ControlPanel::isResourceAvailable(const ResourceBinding& binding) const {
+    return !binding.riftOnly || isRiftMapSelected();
+}
+
+void ControlPanel::updateRiftSectionVisibility() {
+    const bool showRiftSections = isRiftMapSelected();
+    for (auto* section : m_riftOnlySections) {
+        section->setVisible(showRiftSections);
+    }
+}
+
+void ControlPanel::setAllResourcesChecked(bool checked) {
+    for (auto const& [button, binding] : m_resourceButtons) {
+        if (!isResourceAvailable(binding)) {
+            continue;
+        }
+        button->blockSignals(true);
+        button->setChecked(checked);
+        button->blockSignals(false);
+    }
+    notifySelectionChanged();
 }
 
 void ControlPanel::notifySelectionChanged() {
     std::vector<std::string> selected;
-    for (auto const& [box, key] : m_boxMap) {
-        if (box->isChecked()) selected.push_back(key);
+    selected.reserve(m_resourceButtons.size());
+    for (auto const& [button, binding] : m_resourceButtons) {
+        if (!isResourceAvailable(binding)) {
+            continue;
+        }
+        if (button->isChecked()) selected.push_back(binding.key);
     }
     emit selectionChanged(selected);
 }

@@ -2,6 +2,7 @@
 #include <QIcon>
 #include <QPixmap>
 #include <QImage>
+#include <QTimer>
 #include <QtPlugin>
 #include "control_panel.h"
 #include "overlay_window.h"
@@ -44,6 +45,11 @@ int main(int argc, char* argv[]) {
 
     ControlPanel panel;
     panel.show();
+    QTimer::singleShot(0, &panel, [&panel]() {
+        panel.showNormal();
+        panel.raise();
+        panel.activateWindow();
+        });
 
     MapStatusDetector detector;
 
