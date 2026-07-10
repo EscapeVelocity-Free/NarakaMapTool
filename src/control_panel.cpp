@@ -216,6 +216,20 @@ void ControlPanel::setupStyle() {
             font-size: 11px;
             font-weight: 600;
         }
+        QLabel#sourceLink {
+            background: transparent;
+            color: #4d5563;
+            font-size: 11px;
+            font-weight: 800;
+        }
+        QLabel#sourceLink a {
+            color: #4d5563;
+            text-decoration: none;
+        }
+        QLabel#sourceLink a:hover {
+            color: #006bff;
+            text-decoration: underline;
+        }
         QLabel#sectionTitle {
             background: transparent;
             color: #070a11;
@@ -383,6 +397,14 @@ QFrame* ControlPanel::createHeaderCard() {
     auto* clearAllButton = createCommandButton(QString::fromUtf8("全部隐藏"), "secondaryButton");
     layout->addWidget(selectAllButton);
     layout->addWidget(clearAllButton);
+
+    auto* sourceLink = new QLabel(
+        QString::fromUtf8("<a href=\"https://github.com/EscapeVelocity-Free/NarakaMapTool\">GitHub 开源</a>"), card);
+    sourceLink->setObjectName("sourceLink");
+    sourceLink->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    sourceLink->setOpenExternalLinks(true);
+    sourceLink->setToolTip(QString::fromUtf8("在浏览器中打开 NarakaMapTool 开源仓库"));
+    layout->addWidget(sourceLink);
 
     connectActions(selectAllButton, clearAllButton, showBackgroundBox);
     return card;
