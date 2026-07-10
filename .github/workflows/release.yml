@@ -34,7 +34,7 @@ jobs:
         shell: pwsh
         run: |
           conan profile detect --force
-          conan install . --output-folder=build --build=missing -s build_type=Release -s compiler.runtime=static
+          conan install . --output-folder=build --build=missing -s build_type=Release -s compiler.runtime=static -s compiler.cppstd=17
 
       - name: Register Conan CMake presets
         shell: pwsh
