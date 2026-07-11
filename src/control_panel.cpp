@@ -12,7 +12,10 @@
 #include <QTimer>
 #include <QVBoxLayout>
 
+#include <sstream>
 #include <set>
+
+#include "logger.h"
 
 #pragma execution_character_set("utf-8")
 
@@ -35,6 +38,17 @@ const std::set<std::string>& DefaultResourceKeys() {
         "firefly", "wishingWell", "miniShrine", "goldenToad", "flyingTarget", "fireflyCage"
     };
     return keys;
+}
+
+std::string JoinResourceKeys(const std::vector<std::string>& keys) {
+    std::ostringstream stream;
+    for (size_t index = 0; index < keys.size(); ++index) {
+        if (index > 0) {
+            stream << ',';
+        }
+        stream << keys[index];
+    }
+    return stream.str();
 }
 
 }
@@ -71,6 +85,8 @@ ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent) {
 
     updateRiftSectionVisibility();
     QTimer::singleShot(100, this, &ControlPanel::notifySelectionChanged);
+    Logger::info("Control panel initialized: resource_controls={} rift_sections={} default_map_id={}",
+        m_resourceButtons.size(), m_riftOnlySections.size(), m_mapCombo->currentData().toString().toStdString());
 }
 
 std::vector<ControlPanel::ResourceGroup> ControlPanel::buildResourceGroups() {
@@ -489,20 +505,25 @@ void ControlPanel::applyCardShadow(QFrame* card) {
 
 void ControlPanel::connectActions(QPushButton* selectAllButton, QPushButton* clearAllButton, QCheckBox* showBackgroundBox) {
     connect(showBackgroundBox, &QCheckBox::stateChanged, [this](int state) {
+        Logger::info("Control panel background switch changed: show={}", state == Qt::Checked);
         emit toggleBackground(state == Qt::Checked);
     });
 
     connect(m_mapCombo, &QComboBox::currentIndexChanged, [this](int) {
+        Logger::info("Control panel map selection changed: id={} name={}",
+            m_mapCombo->currentData().toString().toStdString(), m_mapCombo->currentText().toStdString());
         emit mapChanged(m_mapCombo->currentData().toString().toStdString(), m_mapCombo->currentText().toStdString());
         updateRiftSectionVisibility();
         notifySelectionChanged();
     });
 
     connect(selectAllButton, &QPushButton::clicked, [this]() {
+        Logger::info("Control panel requested selection of all available resource types.");
         setAllResourcesChecked(true);
     });
 
     connect(clearAllButton, &QPushButton::clicked, [this]() {
+        Logger::info("Control panel requested clearing all available resource types.");
         setAllResourcesChecked(false);
     });
 }
@@ -522,20 +543,25 @@ bool ControlPanel::isResourceAvailable(const ResourceBinding& binding) const {
 
 void ControlPanel::updateRiftSectionVisibility() {
     const bool showRiftSections = isRiftMapSelected();
+    Logger::info("Control panel rift resource section visibility: visible={} map_id={}",
+        showRiftSections, m_mapCombo ? m_mapCombo->currentData().toString().toStdString() : "<unset>");
     for (auto* section : m_riftOnlySections) {
         section->setVisible(showRiftSections);
     }
 }
 
 void ControlPanel::setAllResourcesChecked(bool checked) {
+    size_t updatedCount = 0;
     for (auto const& [button, binding] : m_resourceButtons) {
         if (!isResourceAvailable(binding)) {
             continue;
         }
+        ++updatedCount;
         button->blockSignals(true);
         button->setChecked(checked);
         button->blockSignals(false);
     }
+    Logger::info("Control panel bulk selection applied: checked={} available_resource_types={}", checked, updatedCount);
     notifySelectionChanged();
 }
 
@@ -548,5 +574,6 @@ void ControlPanel::notifySelectionChanged() {
         }
         if (button->isChecked()) selected.push_back(binding.key);
     }
+    Logger::info("Control panel resource selection changed: count={} keys=[{}]", selected.size(), JoinResourceKeys(selected));
     emit selectionChanged(selected);
 }

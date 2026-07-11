@@ -1,4 +1,4 @@
-#include "config_manager.h"
+﻿#include "config_manager.h"
 #include <windows.h>
 #include <fstream>
 #include "logger.h"
@@ -33,6 +33,8 @@ void ConfigManager::init(const std::string& filename) {
 
     Logger::info("Screen resolution: {}x{}", screenW, screenH);
     Logger::info("Auto-adjusted offset: ({}, {})", mapOffsetX, mapOffsetY);
+    Logger::info("Auto-calculated geometry: overlay=({}, {}) size={}, detector=({}, {}), scale={:.4f}",
+        mapOffsetX, mapOffsetY, mapUiSize, detectorX, detectorY, scale);
 
     // --- 第二阶段：从配置文件读取（如果存在） ---
     std::ifstream f(filename);
@@ -50,6 +52,7 @@ void ConfigManager::init(const std::string& filename) {
             if (j.contains("map_path")) mapImagePath = j["map_path"];
 
             Logger::info("Config file loaded successfully, partially overridden parameters.");
+            Logger::info("Config file loaded successfully: {}", filename);
         }
         catch (...) {
             Logger::error("Config file format error, please check.");
@@ -84,4 +87,7 @@ void ConfigManager::init(const std::string& filename) {
             Logger::error("Failed to generate config template: {}", e.what());
         }
     }
+
+    Logger::info("Effective configuration: overlay=({}, {}) size={}, detector=({}, {}), resources={}, maps={}",
+        mapOffsetX, mapOffsetY, mapUiSize, detectorX, detectorY, resourcePath, mapImagePath);
 }

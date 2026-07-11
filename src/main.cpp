@@ -28,63 +28,81 @@ int main(int argc, char* argv[]) {
 
     Logger::init();
     Logger::info("Naraka Map Tool started."); // 测试输出
+    Logger::info("Process startup arguments received: argc={}", argc);
 
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     SetProcessDPIAware();
+    Logger::info("High-DPI scaling and process DPI awareness enabled.");
 
     ConfigManager::init("config.json");
+    Logger::info("Configuration initialization completed.");
 
     QApplication a(argc, argv);
     a.setWindowIcon(loadAppIcon()); // 全局窗口图标（任务栏 / 标题栏 / Alt-Tab）
+    Logger::info("Qt application created and application icon assigned.");
 
     // 1. 创建组件
     OverlayWindow overlay;
     overlay.init(GetModuleHandle(NULL));
     overlay.setMap("2", "龙隐洞天");
     overlay.setVisible(false); // 初始隐藏
+    Logger::info("Overlay initialized with default map id=2 name=龙隐洞天 and hidden state.");
 
     ControlPanel panel;
     panel.show();
+    Logger::info("Control panel created and shown.");
     QTimer::singleShot(0, &panel, [&panel]() {
         panel.showNormal();
         panel.raise();
         panel.activateWindow();
+        Logger::debug("Control panel activated after the initial event loop turn.");
         });
 
     MapStatusDetector detector;
+    Logger::info("Map status detector created.");
 
     // 2. 建立逻辑连接 (信号与槽)
 
     // UI -> Overlay (更新地图和资源)
     QObject::connect(&panel, &ControlPanel::mapChanged, [&](const std::string& id, const std::string& name) {
+        Logger::info("Main bridge received map change: id={} name={}", id, name);
         overlay.setMap(id, name);
         });
     QObject::connect(&panel, &ControlPanel::selectionChanged, [&](const std::vector<std::string>& keys) {
+        Logger::info("Main bridge received resource selection update: key_count={}", keys.size());
         overlay.updateResources(keys);
         });
 
     // Detector -> Overlay (控制显示与标记)
     QObject::connect(&detector, &MapStatusDetector::mapVisibilityChanged, [&](bool visible) {
+        Logger::info("Main bridge received map visibility update: visible={}", visible);
         overlay.setVisible(visible);
         });
     QObject::connect(&detector, &MapStatusDetector::altTriggered, [&]() {
+        Logger::info("Main bridge received Alt navigation trigger.");
         overlay.handleAltAction();
         });
     QObject::connect(&detector, &MapStatusDetector::routeToggleTriggered, [&]() {
+        Logger::info("Main bridge received route visibility trigger.");
         overlay.toggleRouteVisible();
         });
     QObject::connect(&detector, &MapStatusDetector::routeStartTriggered, [&]() {
+        Logger::info("Main bridge received route start trigger.");
         overlay.setNearestPointAsRouteStart();
         });
     QObject::connect(&detector, &MapStatusDetector::routeExcludeTriggered, [&]() {
+        Logger::info("Main bridge received route exclude trigger.");
         overlay.toggleNearestPointExcluded();
         });
     QObject::connect(&detector, &MapStatusDetector::routeResetTriggered, [&]() {
+        Logger::info("Main bridge received route reset trigger.");
         overlay.resetRoute();
         });
 
     QObject::connect(&panel, &ControlPanel::toggleBackground, [&](bool show) {
+        Logger::info("Main bridge received background visibility update: show={}", show);
         overlay.setShowBackground(show);
         });
+    Logger::info("All UI, detector, and overlay signal connections established. Entering event loop.");
     return a.exec(); // 开启 Qt 标准事件循环
 }

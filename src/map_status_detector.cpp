@@ -1,11 +1,14 @@
 ﻿#include "map_status_detector.h"
 #include <cmath>
 #include "config_manager.h"
+#include "logger.h"
 
 MapStatusDetector::MapStatusDetector(QObject* parent) : QObject(parent) {
     m_timer = new QTimer(this);
     connect(m_timer, &QTimer::timeout, this, &MapStatusDetector::processTick);
     m_timer->start(30); // 每30ms检测一次
+    Logger::info("Map status detector started: interval_ms=30 threshold={} detector=({}, {})",
+        THRESHOLD, ConfigManager::detectorX, ConfigManager::detectorY);
 }
 
 void MapStatusDetector::processTick() {
@@ -15,6 +18,7 @@ void MapStatusDetector::processTick() {
         m_whiteCount++; m_blackCount = 0;
         if (m_whiteCount >= THRESHOLD && !m_isMapOpen) {
             m_isMapOpen = true;
+            Logger::info("Map open detected after {} consecutive white samples.", m_whiteCount);
             emit mapVisibilityChanged(true);
         }
     }
@@ -22,6 +26,7 @@ void MapStatusDetector::processTick() {
         m_blackCount++; m_whiteCount = 0;
         if (m_blackCount >= THRESHOLD && m_isMapOpen) {
             m_isMapOpen = false;
+            Logger::info("Map close detected after {} consecutive non-white samples.", m_blackCount);
             emit mapVisibilityChanged(false);
         }
     }
@@ -29,19 +34,24 @@ void MapStatusDetector::processTick() {
     // 2. 检测地图打开时有效的快捷键
     if (m_isMapOpen) {
         if (isKeyPressedOnce(VK_LMENU, m_altWasPressed)) {
+            Logger::info("Detected Alt navigation shortcut while map is open.");
             emit altTriggered();
         }
 
         if (isKeyPressedOnce(VK_SCROLL, m_routeToggleWasPressed)) {
+            Logger::info("Detected ScrollLock route visibility shortcut while map is open.");
             emit routeToggleTriggered();
         }
         if (isKeyPressedOnce(VK_PAUSE, m_routeStartWasPressed)) {
+            Logger::info("Detected Pause route start shortcut while map is open.");
             emit routeStartTriggered();
         }
         if (isKeyPressedOnce(VK_INSERT, m_routeExcludeWasPressed)) {
+            Logger::info("Detected Insert route exclusion shortcut while map is open.");
             emit routeExcludeTriggered();
         }
         if (isKeyPressedOnce(VK_HOME, m_routeResetWasPressed)) {
+            Logger::info("Detected Home route reset shortcut while map is open.");
             emit routeResetTriggered();
         }
     }

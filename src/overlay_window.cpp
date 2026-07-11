@@ -139,16 +139,25 @@ static std::string ResolveMapBackgroundName(const std::string& mapId) {
 
 OverlayWindow::OverlayWindow() : m_hwnd(NULL), m_bgImg(NULL), m_currentMapId("2"), m_currentMapName(u8"龙隐洞天") {
     GdiplusStartupInput si;
-    GdiplusStartup(&m_gdiToken, &si, NULL);
+    const Status status = GdiplusStartup(&m_gdiToken, &si, NULL);
+    if (status == Ok) {
+        Logger::info("GDI+ initialized successfully.");
+    }
+    else {
+        Logger::error("GDI+ initialization failed: status={}", static_cast<int>(status));
+    }
 }
 
 OverlayWindow::~OverlayWindow() {
+    Logger::info("Destroying overlay window: cached_icons={} active_points={}", m_iconCache.size(), m_points.size());
     if (m_bgImg) delete m_bgImg;
     for (auto& pair : m_iconCache) delete pair.second;
     GdiplusShutdown(m_gdiToken);
 }
 
 void OverlayWindow::setMap(const std::string& mapId, const std::string& mapName) {
+    Logger::info("Overlay map switch requested: previous_id={} target_id={} target_name={} background_enabled={}",
+        m_currentMapId, mapId, mapName, m_showBackground);
     m_currentMapId = mapId;
     m_currentMapName = mapName;
     m_routeStartId.clear();
@@ -184,6 +193,8 @@ void OverlayWindow::setMap(const std::string& mapId, const std::string& mapName)
             }
             else {
                 Logger::info("Map switched successfully: {} ({})", mapId, mapName);
+                Logger::info("Map background loaded: id={} name={} file={} dimensions={}x{}",
+                    mapId, mapName, fullPath.string(), m_bgImg->GetWidth(), m_bgImg->GetHeight());
             }
         }
     }
@@ -201,37 +212,70 @@ void OverlayWindow::init(HINSTANCE hInst) {
     m_winX = ConfigManager::mapOffsetX;
     m_winY = ConfigManager::mapOffsetY;
     m_winSize = ConfigManager::mapUiSize;
+    Logger::info("Initializing overlay window: origin=({}, {}) size={} instance={}",
+        m_winX, m_winY, m_winSize, static_cast<const void*>(hInst));
 
     WNDCLASSEXW wcex = { sizeof(WNDCLASSEX) };
     wcex.lpfnWndProc = WndProc;
     wcex.hInstance = hInst;
     wcex.lpszClassName = L"NarakaOverlayWindowClass";
     wcex.hbrBackground = CreateSolidBrush(RGB(1, 1, 1)); // 背景刷为透明键色
-    RegisterClassExW(&wcex);
+    const ATOM windowClass = RegisterClassExW(&wcex);
+    if (windowClass) {
+        Logger::info("Overlay window class registered successfully: atom={}", windowClass);
+    }
+    else {
+        Logger::error("Overlay window class registration failed: last_error={}", static_cast<unsigned long>(GetLastError()));
+    }
 
     m_hwnd = CreateWindowExW(WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
         wcex.lpszClassName, L"NarakaMap", WS_POPUP, m_winX, m_winY, m_winSize, m_winSize, NULL, NULL, hInst, this);
 
+    if (m_hwnd) {
+        Logger::info("Overlay window created successfully: hwnd={}", static_cast<const void*>(m_hwnd));
+    }
+    else {
+        Logger::error("Overlay window creation failed: last_error={}", static_cast<unsigned long>(GetLastError()));
+    }
     SetLayeredWindowAttributes(m_hwnd, RGB(1, 1, 1), 0, LWA_COLORKEY);
     ShowWindow(m_hwnd, SW_SHOW);
 }
 
 void OverlayWindow::updateResources(const std::vector<std::string>& keys) {
+    std::ostringstream keyList;
+    for (size_t index = 0; index < keys.size(); ++index) {
+        if (index > 0) {
+            keyList << ',';
+        }
+        keyList << keys[index];
+    }
+    Logger::info("Overlay resource update requested: map_id={} key_count={} keys=[{}]",
+        m_currentMapId, keys.size(), keyList.str());
     m_activeKeys = keys;
     loadData();
     invalidate();
 }
 
 void OverlayWindow::loadData() {
-    std::ifstream f(std::filesystem::path(ConfigManager::resourcePath) / "resources_naraka.json");
-    if (!f.is_open()) return;
+    const fs::path dataPath = fs::u8path(ConfigManager::resourcePath) / "resources_naraka.json";
+    Logger::debug("Loading resource data: map_id={} file={} active_key_count={}",
+        m_currentMapId, dataPath.string(), m_activeKeys.size());
+    std::ifstream f(dataPath);
+    if (!f.is_open()) {
+        Logger::error("Failed to open resource data file: {}", dataPath.string());
+        return;
+    }
     try {
         nlohmann::json data; f >> data;
         m_points.clear();
+        size_t matchingMapEntries = 0;
+        size_t selectedTypeEntries = 0;
         for (auto& item : data) {
             if (item.value("map", "") == m_currentMapId) {
+                ++matchingMapEntries;
                 for (const auto& key : m_activeKeys) {
                     if (item.contains(key)) {
+                        ++selectedTypeEntries;
                         size_t markerIndex = 0;
                         for (auto& marker : item[key]["MarkerList"]) {
                             double gx = 0, gy = 0;
@@ -267,6 +311,8 @@ void OverlayWindow::loadData() {
             m_routeStartId.clear();
         }
         rebuildRoute();
+        Logger::info("Resource data loaded: map_id={} map_entries={} matched_resource_types={} active_points={} excluded_points={} route_points={}",
+            m_currentMapId, matchingMapEntries, selectedTypeEntries, m_points.size(), m_excludedPointIds.size(), m_routeOrder.size());
     }
     catch (...) {
         Logger::error("loadData error");
@@ -300,6 +346,8 @@ void Win32_KeyPress(BYTE vkCode) {
 void OverlayWindow::handleAltAction() {
     POINT cur;
     GetCursorPos(&cur);
+    Logger::info("Auto-navigation requested: cursor=({}, {}) overlay=({}, {}, {}) active_points={}",
+        cur.x, cur.y, m_winX, m_winY, m_winSize, m_points.size());
 
     // 1. 判断是否在地图 UI 范围内
     if (cur.x >= m_winX && cur.x <= m_winX + m_winSize &&
@@ -319,14 +367,17 @@ void OverlayWindow::handleAltAction() {
 
         // 3. 执行：自动寻路资源 (阈值 100 像素)
         if (target && min_dist < 100.0) {
-            Logger::info("Starting auto-navigation to resource: {}", target->type);
+            Logger::info("Starting auto-navigation: id={} type={} target=({}, {}) distance={:.2f}",
+                target->id, target->type, target->absX, target->absY, min_dist);
 
             // Step 1: 模拟滚轮向上滚动 50 次 (times=50)
             SetCursorPos(target->absX, target->absY);
+            Logger::debug("Auto-navigation step 1: scrolling at target position, repeats=50.");
             Win32_MouseScroll(true, 1, 50);
 
             // Step 2: 在目标点双击
             Win32_MouseClick(target->absX, target->absY);
+            Logger::debug("Auto-navigation step 2: clicked target marker.");
 
             // Step 3: 等待 100ms
             Sleep(50);
@@ -334,15 +385,25 @@ void OverlayWindow::handleAltAction() {
             // Step 4: 点击确认按钮 (1358, 1207)
             // 这里是根据 Python 脚本中 const_var.g_地图是否展开判定点 坐标来确定的
             Win32_MouseClick(ConfigManager::detectorX, ConfigManager::detectorY);
+            Logger::debug("Auto-navigation step 4: clicked confirmation point ({}, {}).",
+                ConfigManager::detectorX, ConfigManager::detectorY);
             
             // Step 5: 等待 100ms
             Sleep(50);
 
             // Step 6: 点击 ESC 键 (VK_ESCAPE)
             Win32_KeyPress(VK_ESCAPE);
+            Logger::debug("Auto-navigation step 6: sent Escape key.");
 
-            Logger::info("Resource point execution completed.");
+            Logger::info("Auto-navigation completed successfully for resource id={}", target->id);
         }
+        else {
+            Logger::warn("Auto-navigation skipped: nearest_marker_found={} nearest_distance={:.2f} threshold=100.00",
+                target != nullptr, min_dist);
+        }
+    }
+    else {
+        Logger::warn("Auto-navigation skipped: cursor is outside the overlay bounds.");
     }
 }
 
@@ -354,6 +415,8 @@ void OverlayWindow::toggleRouteVisible() {
 }
 
 void OverlayWindow::resetRoute() {
+    Logger::info("Resetting marker route: excluded_points={} start_id={} route_points={}",
+        m_excludedPointIds.size(), m_routeStartId, m_routeOrder.size());
     m_excludedPointIds.clear();
     m_routeStartId.clear();
     rebuildRoute();
@@ -457,6 +520,8 @@ void OverlayWindow::rebuildRoute() {
 
     m_routeOrder = BuildNearestNeighborRoute(coords, candidates, startIndex);
     OptimizeRoute2Opt(coords, m_routeOrder, ROUTE_OPTIMIZE_BUDGET_MS);
+    Logger::debug("Marker route rebuilt: candidates={} excluded_points={} start_id={} route_points={} optimize_budget_ms={}",
+        candidates.size(), m_excludedPointIds.size(), m_routeStartId, m_routeOrder.size(), ROUTE_OPTIMIZE_BUDGET_MS);
 }
 
 void OverlayWindow::drawRoute(Graphics& g) {
@@ -604,6 +669,7 @@ LRESULT CALLBACK OverlayWindow::WndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM l
 
 void OverlayWindow::setVisible(bool visible) {
     if (m_hwnd) {
+        Logger::info("Overlay visibility changed: visible={} hwnd={}", visible, static_cast<const void*>(m_hwnd));
         ShowWindow(m_hwnd, visible ? SW_SHOW : SW_HIDE);
     }
 }
@@ -613,6 +679,8 @@ bool OverlayWindow::isVisible() {
 }
 
 void OverlayWindow::setShowBackground(bool show) {
+    Logger::info("Overlay background visibility changed: show={} map_id={} background_loaded={}",
+        show, m_currentMapId, m_bgImg != nullptr);
     m_showBackground = show;
     invalidate();
 }
