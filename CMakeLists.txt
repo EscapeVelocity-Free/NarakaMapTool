@@ -57,7 +57,7 @@ set(CPACK_SOURCE_GENERATOR "") # 禁用源码包生成
 # 设置包的基本信息
 set(CPACK_PACKAGE_NAME "NarakaMapTool")
 set(CPACK_PACKAGE_VENDOR "StarStudio")
-set(CPACK_PACKAGE_VERSION "1.2.1")
+set(CPACK_PACKAGE_VERSION "1.2.2")
 set(CPACK_GENERATOR "ZIP")
 
 # 1. 指定可执行文件
@@ -73,6 +73,7 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/resources"
         PATTERN "build" EXCLUDE
         PATTERN "app.rc" EXCLUDE        # 源码文件，不需进分发包
         PATTERN "app.ico" EXCLUDE       # 图标已嵌入 exe，无需单独分发
+        PATTERN "resources_naraka_new*.json" EXCLUDE # 临时抓取数据，不进入发布包
 )
 
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/map" 

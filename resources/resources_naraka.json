@@ -25584,6 +25584,46 @@
                         777.9
                     ],
                     "img": "5/firefly/b3d24c325ecab401552f33682a8d6ce1"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        863.7,
+                        1681.4
+                    ],
+                    "img": "5/firefly/91c66a596dd4f46c7acf8f4a27b763f1"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1422.9,
+                        1203.2
+                    ],
+                    "img": "5/firefly/ddb6f30fb2a10fc5d1b2a816dbd03da4"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1408.9,
+                        821.1
+                    ],
+                    "img": "5/firefly/e024d0fe490f6bf149595b2d28100619"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1409.3,
+                        849.2
+                    ],
+                    "img": "5/firefly/61c1b35871371106ea403eb50ab4cdc2"
+                },
+                {
+                    "type": "firefly",
+                    "pos": [
+                        1466.6,
+                        810.4
+                    ],
+                    "img": "5/firefly/5fb01ac0bbd5ff109d7bc9caa305428a"
                 }
             ]
         },
@@ -25604,6 +25644,586 @@
                         541.4
                     ],
                     "img": "5/treasureCave/bcc6d4d82f3ddbc7376dd16bc739cfcc"
+                }
+            ]
+        },
+        "bell": {
+            "MarkerList": [
+                {
+                    "type": "bell",
+                    "pos": [
+                        655.1,
+                        700.1
+                    ],
+                    "img": "5/bell/751210bfd8f4e06dacb091a7560c02bb"
+                },
+                {
+                    "type": "bell",
+                    "pos": [
+                        759,
+                        911.7
+                    ],
+                    "img": "5/bell/735332385e8c4bb003e8338a38be5feb"
+                },
+                {
+                    "type": "bell",
+                    "pos": [
+                        826,
+                        523.7
+                    ],
+                    "img": "5/bell/2ff0ad5bcf99e2f3c70408f645a253e4"
+                },
+                {
+                    "type": "bell",
+                    "pos": [
+                        876.4,
+                        1469
+                    ],
+                    "img": "5/bell/bafe9e02442fcf14389ce17cc8fa3101"
+                },
+                {
+                    "type": "bell",
+                    "pos": [
+                        1176.4,
+                        412.9
+                    ],
+                    "img": "5/bell/891104fcf3759fdd255fcef20a0331c8"
+                },
+                {
+                    "type": "bell",
+                    "pos": [
+                        1497.8,
+                        1351.8
+                    ],
+                    "img": "5/bell/137db393c956214508f4cb60b37c3d44"
+                },
+                {
+                    "type": "bell",
+                    "pos": [
+                        1612.6,
+                        839.6
+                    ],
+                    "img": "5/bell/a017c27013f1f233990d182157b2a1f8"
+                }
+            ]
+        },
+        "bounty": {
+            "MarkerList": [
+                {
+                    "type": "bounty",
+                    "pos": [
+                        1554.5,
+                        819.3
+                    ],
+                    "img": "5/bounty/79c6b4b5b04f8b6ef0ced308a0acbbfa"
+                },
+                {
+                    "type": "bounty",
+                    "pos": [
+                        1576.2,
+                        1280.8
+                    ],
+                    "img": "5/bounty/cf39191a5c6345d3e91d0b307c1f45e0"
+                }
+            ]
+        },
+        "dandelion": {
+            "MarkerList": [
+                {
+                    "type": "dandelion",
+                    "pos": [
+                        623,
+                        1251.3
+                    ],
+                    "img": "5/dandelion/fbe31ff8cb718491b5fc5f6e74a72e57"
+                },
+                {
+                    "type": "dandelion",
+                    "pos": [
+                        661.6,
+                        553.8
+                    ],
+                    "img": "5/dandelion/f3501b053a9091b9aa1599ce6638f7a9"
+                },
+                {
+                    "type": "dandelion",
+                    "pos": [
+                        765.8,
+                        540.8
+                    ],
+                    "img": "5/dandelion/9c494d3a273e1f57dacb180e2e45cf20"
+                },
+                {
+                    "type": "dandelion",
+                    "pos": [
+                        878.1,
+                        964.4
+                    ],
+                    "img": "5/dandelion/945611884a30dc51f95e6588d6e8fe32"
+                },
+                {
+                    "type": "dandelion",
+                    "pos": [
+                        931.4,
+                        1058.9
+                    ],
+                    "img": "5/dandelion/1185615790b6052dbea02fe31cd838b1"
+                },
+                {
+                    "type": "dandelion",
+                    "pos": [
+                        1131.4,
+                        716.4
+                    ],
+                    "img": "5/dandelion/796e5863e275bd911ae985dee05c79f0"
+                },
+                {
+                    "type": "dandelion",
+                    "pos": [
+                        1532.2,
+                        1320.2
+                    ],
+                    "img": "5/dandelion/1d163000f1f818a7e7d44037ce569a74"
+                },
+                {
+                    "type": "dandelion",
+                    "pos": [
+                        1584.5,
+                        826
+                    ],
+                    "img": "5/dandelion/05b35e34f50504762f858bb15f76dea0"
+                },
+                {
+                    "type": "dandelion",
+                    "pos": [
+                        1639,
+                        928.2
+                    ],
+                    "img": "5/dandelion/3d8c7d1574bfe6ec6c0be61871e7cd1b"
+                }
+            ]
+        },
+        "earthShrine": {
+            "MarkerList": [
+                {
+                    "type": "earthShrine",
+                    "pos": [
+                        1627.8,
+                        1364.3
+                    ],
+                    "img": "5/earthShrine/a5a86e262801be563eeb99b24f2e94fa"
+                }
+            ]
+        },
+        "forbiddenSeal": {
+            "MarkerList": [
+                {
+                    "type": "forbiddenSeal",
+                    "pos": [
+                        526.1,
+                        541.2
+                    ],
+                    "img": "5/forbiddenSeal/8ab7347d6b7a2507cc70e7a9451d508f"
+                },
+                {
+                    "type": "forbiddenSeal",
+                    "pos": [
+                        589.2,
+                        721.1
+                    ],
+                    "img": "5/forbiddenSeal/5c9c80bb29f7495b3c4152bb1487a286"
+                },
+                {
+                    "type": "forbiddenSeal",
+                    "pos": [
+                        673.9,
+                        865.6
+                    ],
+                    "img": "5/forbiddenSeal/18a7b25aa850612646f591184fb37f8b"
+                },
+                {
+                    "type": "forbiddenSeal",
+                    "pos": [
+                        911.4,
+                        1157.7
+                    ],
+                    "img": "5/forbiddenSeal/01131bc639da64133af1b6b56a7e81a5"
+                },
+                {
+                    "type": "forbiddenSeal",
+                    "pos": [
+                        1144.5,
+                        392.8
+                    ],
+                    "img": "5/forbiddenSeal/2955713cb175be442d641d3be10abb97"
+                },
+                {
+                    "type": "forbiddenSeal",
+                    "pos": [
+                        1151.3,
+                        791.5
+                    ],
+                    "img": "5/forbiddenSeal/7872896e2019bdc7697fe3c9ce48ce57"
+                },
+                {
+                    "type": "forbiddenSeal",
+                    "pos": [
+                        1549.5,
+                        881
+                    ],
+                    "img": "5/forbiddenSeal/c3184e810486f2133b03223812680e5d"
+                }
+            ]
+        },
+        "ironbackTurtle": {
+            "MarkerList": [
+                {
+                    "type": "ironbackTurtle",
+                    "pos": [
+                        1637.6,
+                        1338.9
+                    ],
+                    "img": "5/ironbackTurtle/fa48cefad53c1b79d2e7a8264ef6f671"
+                },
+                {
+                    "type": "ironbackTurtle",
+                    "pos": [
+                        1704.2,
+                        1123.9
+                    ],
+                    "img": "5/ironbackTurtle/0bc0155f0b7282fecdbedfd8c66e2709"
+                }
+            ]
+        },
+        "ironUrchin": {
+            "MarkerList": [
+                {
+                    "type": "ironUrchin",
+                    "pos": [
+                        748.9,
+                        568.7
+                    ],
+                    "img": "5/ironUrchin/77c887a2ce498d68e82ddd94f27cdbc5"
+                },
+                {
+                    "type": "ironUrchin",
+                    "pos": [
+                        758.8,
+                        570.8
+                    ],
+                    "img": "5/ironUrchin/199ca5e19e96a2ba75f69f29e1c08a89"
+                },
+                {
+                    "type": "ironUrchin",
+                    "pos": [
+                        1427,
+                        1323.9
+                    ],
+                    "img": "5/ironUrchin/76ef370aa85313330e9900c399dbae52"
+                },
+                {
+                    "type": "ironUrchin",
+                    "pos": [
+                        1460.7,
+                        1384.5
+                    ],
+                    "img": "5/ironUrchin/062815598fd7b8c6b12ee73fdfb40f97"
+                },
+                {
+                    "type": "ironUrchin",
+                    "pos": [
+                        1475.9,
+                        1455.3
+                    ],
+                    "img": "5/ironUrchin/d4eb25f8e58dce01436a9f83004daaa0"
+                },
+                {
+                    "type": "ironUrchin",
+                    "pos": [
+                        1499.3,
+                        1322.5
+                    ],
+                    "img": "5/ironUrchin/ac5f62e502316056e06ffd942f244149"
+                },
+                {
+                    "type": "ironUrchin",
+                    "pos": [
+                        1510.4,
+                        1431.7
+                    ],
+                    "img": "5/ironUrchin/3cb9e05e317f46df95a5446eee14a01d"
+                },
+                {
+                    "type": "ironUrchin",
+                    "pos": [
+                        1608.9,
+                        1267.6
+                    ],
+                    "img": "5/ironUrchin/f7a07fe8f51b7e9cab2539dff1f71de7"
+                },
+                {
+                    "type": "ironUrchin",
+                    "pos": [
+                        1616.1,
+                        1279.4
+                    ],
+                    "img": "5/ironUrchin/14a8b9bdcfe28ac7e4976c00bfb77a9c"
+                }
+            ]
+        },
+        "pricklyPear": {
+            "MarkerList": [
+                {
+                    "type": "pricklyPear",
+                    "pos": [
+                        621.8,
+                        1252.7
+                    ],
+                    "img": "5/pricklyPear/9ea21536751cedb361499c5f6e65b200"
+                },
+                {
+                    "type": "pricklyPear",
+                    "pos": [
+                        665.9,
+                        1372.4
+                    ],
+                    "img": "5/pricklyPear/65b451ab4a6bd2356c24d92c062e779c"
+                },
+                {
+                    "type": "pricklyPear",
+                    "pos": [
+                        711.1,
+                        564.6
+                    ],
+                    "img": "5/pricklyPear/af4275446b9c228da7cbe895b1ab446e"
+                },
+                {
+                    "type": "pricklyPear",
+                    "pos": [
+                        1358.7,
+                        1426.5
+                    ],
+                    "img": "5/pricklyPear/30e83f5feaa8903e5fe1bcf47848a45f"
+                }
+            ]
+        },
+        "questBell": {
+            "MarkerList": [
+                {
+                    "type": "questBell",
+                    "pos": [
+                        835.5,
+                        392.6
+                    ],
+                    "img": "5/questBell/ee383d8fb421b637140964b83af6eca6"
+                },
+                {
+                    "type": "questBell",
+                    "pos": [
+                        929.1,
+                        921
+                    ],
+                    "img": "5/questBell/a99652b908d3f47468477e0a836fc0cb"
+                },
+                {
+                    "type": "questBell",
+                    "pos": [
+                        1059.8,
+                        970.6
+                    ],
+                    "img": "5/questBell/66828c35e956de0c66171b7eb59e0534"
+                },
+                {
+                    "type": "questBell",
+                    "pos": [
+                        1134.2,
+                        760.1
+                    ],
+                    "img": "5/questBell/0b04305bd286b0c379ed7d7e55cf34c0"
+                },
+                {
+                    "type": "questBell",
+                    "pos": [
+                        1544.4,
+                        788.4
+                    ],
+                    "img": "5/questBell/12263be7a012ffebd23cda8176cf77b6"
+                }
+            ]
+        },
+        "questCache": {
+            "MarkerList": [
+                {
+                    "type": "questCache",
+                    "pos": [
+                        603.2,
+                        552.2
+                    ],
+                    "img": "5/questCache/59fb77b9acd2dd345bd5c8f0eebac3b1"
+                },
+                {
+                    "type": "questCache",
+                    "pos": [
+                        879.2,
+                        577.4
+                    ],
+                    "img": "5/questCache/6cacb95af4d65a8355ee658f78c3beb1"
+                },
+                {
+                    "type": "questCache",
+                    "pos": [
+                        941.9,
+                        1521
+                    ],
+                    "img": "5/questCache/d59de189e61f6c3be2b874058250e41c"
+                },
+                {
+                    "type": "questCache",
+                    "pos": [
+                        1633.2,
+                        893.7
+                    ],
+                    "img": "5/questCache/099ca4cc3734889929957fe45dd68419"
+                }
+            ]
+        },
+        "questShrine": {
+            "MarkerList": [
+                {
+                    "type": "questShrine",
+                    "pos": [
+                        586.8,
+                        538.4
+                    ],
+                    "img": "5/questShrine/6f3e75b7d81fd68f7304ddd6d492dae9"
+                },
+                {
+                    "type": "questShrine",
+                    "pos": [
+                        726.9,
+                        958.3
+                    ],
+                    "img": "5/questShrine/413e69069e2d8661c3b51a0e1bdb4962"
+                },
+                {
+                    "type": "questShrine",
+                    "pos": [
+                        764.3,
+                        912.8
+                    ],
+                    "img": "5/questShrine/1438bfb35ff3d404fc7136b6be9b7869"
+                },
+                {
+                    "type": "questShrine",
+                    "pos": [
+                        775.5,
+                        887.2
+                    ],
+                    "img": "5/questShrine/ff3a4f659d251363357bded60bd90082"
+                },
+                {
+                    "type": "questShrine",
+                    "pos": [
+                        869.2,
+                        944.6
+                    ],
+                    "img": "5/questShrine/24a34b6dd0d366067014620be31f192c"
+                },
+                {
+                    "type": "questShrine",
+                    "pos": [
+                        1211.9,
+                        1323
+                    ],
+                    "img": "5/questShrine/03c1c526f7fe4390a7d2613429cd9259"
+                }
+            ]
+        },
+        "salak": {
+            "MarkerList": [
+                {
+                    "type": "salak",
+                    "pos": [
+                        537.2,
+                        562.9
+                    ],
+                    "img": "5/salak/47b8651124d7bb398cd785bcb1080c50"
+                },
+                {
+                    "type": "salak",
+                    "pos": [
+                        540.4,
+                        558.5
+                    ],
+                    "img": "5/salak/f5bed4042aad0b84b25bec39ea88d5be"
+                },
+                {
+                    "type": "salak",
+                    "pos": [
+                        578.3,
+                        1106.2
+                    ],
+                    "img": "5/salak/6c92275f6ed9d2b45e37224812e942d3"
+                },
+                {
+                    "type": "salak",
+                    "pos": [
+                        714.5,
+                        567.2
+                    ],
+                    "img": "5/salak/92f93f1d8801329065a3397ba2988694"
+                },
+                {
+                    "type": "salak",
+                    "pos": [
+                        1352.1,
+                        625.4
+                    ],
+                    "img": "5/salak/2db5fcd9d76e82496699aa63a687f943"
+                }
+            ]
+        },
+        "spiritClam": {
+            "MarkerList": [
+                {
+                    "type": "spiritClam",
+                    "pos": [
+                        1006.6,
+                        488.1
+                    ],
+                    "img": "5/spiritClam/34809e890f8f6d4aaf060687f144b00a"
+                },
+                {
+                    "type": "spiritClam",
+                    "pos": [
+                        1019.6,
+                        485.5
+                    ],
+                    "img": "5/spiritClam/1fe6fbcd2218360bc55785db05186f5f"
+                },
+                {
+                    "type": "spiritClam",
+                    "pos": [
+                        1181.5,
+                        443.5
+                    ],
+                    "img": "5/spiritClam/a0f89758c3fd068aae8056362368ffe7"
+                },
+                {
+                    "type": "spiritClam",
+                    "pos": [
+                        1202.9,
+                        443.2
+                    ],
+                    "img": "5/spiritClam/0f99d56e23e6bb83f3e8ef1592325d79"
+                },
+                {
+                    "type": "spiritClam",
+                    "pos": [
+                        1550.2,
+                        846.2
+                    ],
+                    "img": "5/spiritClam/840548099c9d5f9c2ac3943798cbd5f3"
                 }
             ]
         }

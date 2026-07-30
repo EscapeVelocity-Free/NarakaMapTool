@@ -134,7 +134,8 @@ std::vector<ControlPanel::ResourceGroup> ControlPanel::buildResourceGroups() {
                 {"金堆", "gold"}, {"绿堆", "green"}, {"漂浮堆", "floatingPile"},
                 {"钟", "bell"}, {"攻城弩", "ballista"}, {"滴滴打车", "soaringArm"},
                 {"捕兽夹", "bearTrap"}, {"野生动物", "wildlife"}, {"烤火", "bonfire"},
-                {"疗愈之树", "healingTree"}, {"老鼠", "rat"}, {"土地庙", "prayerShrine"},
+                {"疗愈之树", "healingTree"}, {"老鼠", "rat"}, {"土地庙", "earthShrine"},
+                {"铁蒺藜", "ironUrchin"}, {"铁棘龟", "ironbackTurtle"}, {"灵蚌", "spiritClam"},
                 {"铜钱", "treasureCoin"}
             }
         },
