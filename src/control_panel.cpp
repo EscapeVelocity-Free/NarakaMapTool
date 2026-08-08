@@ -84,6 +84,7 @@ ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent) {
     rootLayout->addWidget(scrollArea, 1);
 
     updateRiftSectionVisibility();
+    updateLayerSelectorVisibility();
     QTimer::singleShot(100, this, &ControlPanel::notifySelectionChanged);
     Logger::info("Control panel initialized: resource_controls={} rift_sections={} default_map_id={}",
         m_resourceButtons.size(), m_riftOnlySections.size(), m_mapCombo->currentData().toString().toStdString());
@@ -179,7 +180,10 @@ std::vector<ControlPanel::ResourceGroup> ControlPanel::buildResourceGroups() {
                 {"大收集柜", "riftLargeCollectionCabinet"},
                 {"大杂物柜", "riftBigUtilityCabinet"},
                 {"大杂货铺", "riftLargeGroceryStore"},
-                {"大收集铺", "riftLargeCollectionShop"}
+                {"大收集铺", "riftLargeCollectionShop"},
+                {"断章", "riftSeveredStatutes"},
+                {"安魂钟", "riftSoulCalmingBell"},
+                {"裂隙出口", "riftSecretExitPortal"}
             }
         }
     };
@@ -254,7 +258,7 @@ void ControlPanel::setupStyle() {
             font-weight: 900;
         }
         QComboBox {
-            min-width: 190px;
+            min-width: 150px;
             min-height: 34px;
             padding: 4px 32px 4px 14px;
             border: 1px solid #c8cfdd;
@@ -262,6 +266,12 @@ void ControlPanel::setupStyle() {
             background: #ffffff;
             color: #080b12;
             font-weight: 800;
+        }
+        QComboBox#mapCombo {
+            min-width: 168px;
+        }
+        QComboBox#layerCombo {
+            min-width: 128px;
         }
         QComboBox:hover {
             border-color: #9db7e8;
@@ -391,19 +401,37 @@ QFrame* ControlPanel::createHeaderCard() {
 
     layout->addLayout(titleBlock, 1);
 
+    auto* mapField = new QVBoxLayout();
+    mapField->setSpacing(4);
     auto* mapLabel = new QLabel(QString::fromUtf8("当前地图"), card);
     mapLabel->setObjectName("fieldLabel");
-    layout->addWidget(mapLabel);
+    mapField->addWidget(mapLabel);
 
     m_mapCombo = new QComboBox(card);
+    m_mapCombo->setObjectName("mapCombo");
     m_mapCombo->addItem(QString::fromUtf8("聚窟州"), "0");
     m_mapCombo->addItem(QString::fromUtf8("火罗国"), "1");
     m_mapCombo->addItem(QString::fromUtf8("龙隐洞天"), "2");
     m_mapCombo->addItem(QString::fromUtf8("风起火罗"), "3");
     m_mapCombo->addItem(QString::fromUtf8("满江红"), "4");
     m_mapCombo->addItem(QString::fromUtf8("宛渠"), "5");
+    m_mapCombo->addItem(QString::fromUtf8("大风歌"), "6");
     m_mapCombo->setCurrentIndex(2);
-    layout->addWidget(m_mapCombo);
+    mapField->addWidget(m_mapCombo);
+    layout->addLayout(mapField);
+
+    auto* layerField = new QVBoxLayout();
+    layerField->setSpacing(4);
+    m_layerLabel = new QLabel(QString::fromUtf8("地图楼层"), card);
+    m_layerLabel->setObjectName("fieldLabel");
+    layerField->addWidget(m_layerLabel);
+    m_layerCombo = new QComboBox(card);
+    m_layerCombo->setObjectName("layerCombo");
+    m_layerCombo->addItem(QString::fromUtf8("地表层"), 0);
+    m_layerCombo->addItem(QString::fromUtf8("地下层"), 1);
+    m_layerCombo->setCurrentIndex(0);
+    layerField->addWidget(m_layerCombo);
+    layout->addLayout(layerField);
 
     auto* showBackgroundBox = new QCheckBox(QString::fromUtf8("背景地图"), card);
     showBackgroundBox->setObjectName("switchCheck");
@@ -511,11 +539,29 @@ void ControlPanel::connectActions(QPushButton* selectAllButton, QPushButton* cle
     });
 
     connect(m_mapCombo, &QComboBox::currentIndexChanged, [this](int) {
+        if (m_layerCombo) {
+            m_layerCombo->blockSignals(true);
+            m_layerCombo->setCurrentIndex(0);
+            m_layerCombo->blockSignals(false);
+        }
         Logger::info("Control panel map selection changed: id={} name={}",
             m_mapCombo->currentData().toString().toStdString(), m_mapCombo->currentText().toStdString());
         emit mapChanged(m_mapCombo->currentData().toString().toStdString(), m_mapCombo->currentText().toStdString());
         updateRiftSectionVisibility();
+        updateLayerSelectorVisibility();
+        emit layerChanged(0);
         notifySelectionChanged();
+    });
+
+    connect(m_layerCombo, &QComboBox::currentIndexChanged, [this](int index) {
+        if (!isStormchantMapSelected()) {
+            return;
+        }
+        const int layer = m_layerCombo->itemData(index).toInt();
+        Logger::info("Control panel layer selection changed: map_id={} layer={} name={}",
+            m_mapCombo->currentData().toString().toStdString(), layer,
+            m_layerCombo->currentText().toStdString());
+        emit layerChanged(layer);
     });
 
     connect(selectAllButton, &QPushButton::clicked, [this]() {
@@ -535,7 +581,11 @@ bool ControlPanel::isRiftMapSelected() const {
     }
 
     const QString mapId = m_mapCombo->currentData().toString();
-    return mapId == "3" || mapId == "4";
+    return mapId == "3" || mapId == "4" || mapId == "6";
+}
+
+bool ControlPanel::isStormchantMapSelected() const {
+    return m_mapCombo && m_mapCombo->currentData().toString() == "6";
 }
 
 bool ControlPanel::isResourceAvailable(const ResourceBinding& binding) const {
@@ -549,6 +599,14 @@ void ControlPanel::updateRiftSectionVisibility() {
     for (auto* section : m_riftOnlySections) {
         section->setVisible(showRiftSections);
     }
+}
+
+void ControlPanel::updateLayerSelectorVisibility() {
+    const bool visible = isStormchantMapSelected();
+    Logger::info("Control panel layer selector visibility: visible={} map_id={}",
+        visible, m_mapCombo ? m_mapCombo->currentData().toString().toStdString() : "<unset>");
+    if (m_layerLabel) m_layerLabel->setVisible(visible);
+    if (m_layerCombo) m_layerCombo->setVisible(visible);
 }
 
 void ControlPanel::setAllResourcesChecked(bool checked) {

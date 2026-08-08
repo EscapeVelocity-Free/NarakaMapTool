@@ -26227,5 +26227,1133 @@
                 }
             ]
         }
+    },
+    {
+        "riftChestEpic": {
+            "MarkerList": [
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1206.5,
+                        1282.6
+                    ],
+                    "img": "6/riftChestEpic/fe2609d451a75bfce021c9c1728cbcb3"
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1370.3,
+                        936.7
+                    ],
+                    "img": "6/riftChestEpic/fa722763934959648c1a51aae0c88c86"
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1295.3,
+                        794.5
+                    ],
+                    "img": "6/riftChestEpic/374652885e011c22e78f8bd29abd552e",
+                    "layer": 1
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1234.8,
+                        909.3
+                    ],
+                    "img": "6/riftChestEpic/f8000cbe95fd73687da1cf7a1dddbfea",
+                    "layer": 1
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1238.4,
+                        1135.7
+                    ],
+                    "img": "6/riftChestEpic/0e00835454891c5680b9e5fa0ec3f4b3",
+                    "layer": 1
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1304.5,
+                        929.2
+                    ],
+                    "img": "6/riftChestEpic/e97a1998cb46eebed2b3fa4af53aacc7",
+                    "layer": 1
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1400.2,
+                        977
+                    ],
+                    "img": "6/riftChestEpic/2e16a252ee725e65cb17f1b9b4764c77"
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1255.5,
+                        768
+                    ],
+                    "img": "6/riftChestEpic/e3e187e47b9b300cf109899496bfe5d9",
+                    "layer": 1
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1276.7,
+                        1091
+                    ],
+                    "img": "6/riftChestEpic/c7fb406b384565726bd4e4f1d84b8276",
+                    "layer": 1
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1279.6,
+                        1240
+                    ],
+                    "img": "6/riftChestEpic/aeaac68b0911ee58d8ba7134bd0956b0",
+                    "layer": 1
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1284.4,
+                        759
+                    ],
+                    "img": "6/riftChestEpic/5845c4f3da3187f1facb9f02280a671d",
+                    "layer": 1
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1359.7,
+                        1132.7
+                    ],
+                    "img": "6/riftChestEpic/e27fb6204f43584462df8eb6a9fff5fd",
+                    "layer": 1
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1453.7,
+                        731.9
+                    ],
+                    "img": "6/riftChestEpic/0a1393e94424784dd2bf756f6e204dd2"
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1269.3,
+                        1091.4
+                    ],
+                    "img": "6/riftChestEpic/1b749c0165773b6213bb495689c2f90d",
+                    "layer": 1
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1120.8,
+                        885.4
+                    ],
+                    "img": "6/riftChestEpic/ebc9885187298011fc5a5a5a2ebcb16b"
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1162.6,
+                        1093.2
+                    ],
+                    "img": "6/riftChestEpic/c38cb87922560b83807c377e6d90ca6e"
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1227.2,
+                        798.1
+                    ],
+                    "img": "6/riftChestEpic/cdbcf68975a90f1ab0ac615456fe4cb7"
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1349.1,
+                        755.9
+                    ],
+                    "img": "6/riftChestEpic/43915fe55435dfba0de175db0ef7c2a9"
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1444.8,
+                        975
+                    ],
+                    "img": "6/riftChestEpic/a36137846f43c4c40628107e5e47a751"
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1171.9,
+                        1324.9
+                    ],
+                    "img": "6/riftChestEpic/6b73252fdec7206c8c3915bf3f474307",
+                    "layer": 1
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1260.9,
+                        1359
+                    ],
+                    "img": "6/riftChestEpic/250c5de6c7f3770ef2741716e3b3f0ff",
+                    "layer": 1
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1039.1,
+                        1285.7
+                    ],
+                    "img": "6/riftChestEpic/ca44c61fffeb60c33548d18d7f845212"
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1106.5,
+                        1351.8
+                    ],
+                    "img": "6/riftChestEpic/274a32234d4fc3cff6c7c6b3ccc9b6c1"
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1141.6,
+                        914.9
+                    ],
+                    "img": "6/riftChestEpic/0b258f27f9cff75600a53fc545add03d"
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1173.3,
+                        956.3
+                    ],
+                    "img": "6/riftChestEpic/e06efdf772af940f0b80d54c26908339"
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1181.2,
+                        917
+                    ],
+                    "img": "6/riftChestEpic/fe7fc1f80f93c1d803c010ceb98d32c5"
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1508.1,
+                        952.5
+                    ],
+                    "img": "6/riftChestEpic/95600f4293b8652857448d72f20f55af"
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1233,
+                        1088.7
+                    ],
+                    "img": "6/riftChestEpic/bcd61fd9c78ea3114d691cc484ef3ee2",
+                    "layer": 1
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1327.3,
+                        1099.1
+                    ],
+                    "img": "6/riftChestEpic/9d1de3d8dd099affb6a2e05682456f39",
+                    "layer": 1
+                }
+            ]
+        },
+        "riftChestLegendary": {
+            "MarkerList": [
+                {
+                    "type": "riftChestLegendary",
+                    "pos": [
+                        1270.7,
+                        1234.1
+                    ],
+                    "img": "6/riftChestLegendary/d6ec44c0289c62e2045385a751156da3",
+                    "layer": 1
+                },
+                {
+                    "type": "riftChestLegendary",
+                    "pos": [
+                        1432.4,
+                        723.2
+                    ],
+                    "img": "6/riftChestLegendary/572f63f9b8a8c28f8ae2d4f6b4cf407e"
+                },
+                {
+                    "type": "riftChestLegendary",
+                    "pos": [
+                        1462.4,
+                        726.5
+                    ],
+                    "img": "6/riftChestLegendary/2a1435058e18b42fd2fa9e28490df9be"
+                },
+                {
+                    "type": "riftChestLegendary",
+                    "pos": [
+                        1265.9,
+                        1134.2
+                    ],
+                    "img": "6/riftChestLegendary/de084e02f48b862ca9eff6fd6c282f8f",
+                    "layer": 1
+                },
+                {
+                    "type": "riftChestLegendary",
+                    "pos": [
+                        1276.3,
+                        1091.1
+                    ],
+                    "img": "6/riftChestLegendary/6074beffc190269047a5c5a93cc49064",
+                    "layer": 1
+                }
+            ]
+        },
+        "riftSeveredStatutes": {
+            "MarkerList": [
+                {
+                    "type": "riftSeveredStatutes",
+                    "pos": [
+                        1284.5,
+                        1202.8
+                    ],
+                    "img": "6/riftSeveredStatutes/7579f38cf04651648ef03b21b3c56dfd",
+                    "layer": 1
+                },
+                {
+                    "type": "riftSeveredStatutes",
+                    "pos": [
+                        1156.9,
+                        1222.4
+                    ],
+                    "img": "6/riftSeveredStatutes/1bd18aa32b18c82ab745df952175a051"
+                },
+                {
+                    "type": "riftSeveredStatutes",
+                    "pos": [
+                        1222.8,
+                        1232.6
+                    ],
+                    "img": "6/riftSeveredStatutes/0d68a49afba892d27ff1cc39b6f55a02",
+                    "layer": 1
+                },
+                {
+                    "type": "riftSeveredStatutes",
+                    "pos": [
+                        1276.2,
+                        1093.5
+                    ],
+                    "img": "6/riftSeveredStatutes/9989434b1d38ff66df10d725ca693a1b",
+                    "layer": 1
+                },
+                {
+                    "type": "riftSeveredStatutes",
+                    "pos": [
+                        1195.3,
+                        727.4
+                    ],
+                    "img": "6/riftSeveredStatutes/73361266d0e276a034e6e3d1ca72966c"
+                },
+                {
+                    "type": "riftSeveredStatutes",
+                    "pos": [
+                        1218.2,
+                        792.2
+                    ],
+                    "img": "6/riftSeveredStatutes/a46269489c13d331998dacafe76f91eb"
+                },
+                {
+                    "type": "riftSeveredStatutes",
+                    "pos": [
+                        1279.4,
+                        1241.9
+                    ],
+                    "img": "6/riftSeveredStatutes/a8620d61fd14951bb6d199f886716080"
+                },
+                {
+                    "type": "riftSeveredStatutes",
+                    "pos": [
+                        1206.8,
+                        1277.7
+                    ],
+                    "img": "6/riftSeveredStatutes/d3484d80a75ff43cef19b6969021f8f7"
+                }
+            ]
+        },
+        "riftSoulCalmingBell": {
+            "MarkerList": [
+                {
+                    "type": "riftSoulCalmingBell",
+                    "pos": [
+                        1326.1,
+                        1115.8
+                    ],
+                    "img": "6/riftSoulCalmingBell/a611a79fc25077877879de2ecfacd866",
+                    "layer": 1
+                },
+                {
+                    "type": "riftSoulCalmingBell",
+                    "pos": [
+                        1374.1,
+                        1151.2
+                    ],
+                    "img": "6/riftSoulCalmingBell/07bff2b954c73e7e9b5ce52e3533115d",
+                    "layer": 1
+                },
+                {
+                    "type": "riftSoulCalmingBell",
+                    "pos": [
+                        1348.3,
+                        1104.2
+                    ],
+                    "img": "6/riftSoulCalmingBell/1395f94ba8931a0f62fe899ca8c444da",
+                    "layer": 1
+                }
+            ]
+        },
+        "riftBigHamper": {
+            "MarkerList": [
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1123.9,
+                        979.3
+                    ],
+                    "img": "6/riftBigHamper/4c5c52236a7d5bf054b6b47001b8e2a5"
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1184.5,
+                        731.3
+                    ],
+                    "img": "6/riftBigHamper/e49ba966f92b2aca92a6450c35ff7ee4"
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1187.8,
+                        1224.4
+                    ],
+                    "img": "6/riftBigHamper/b52c793b1894b917099d8b570e74ebba"
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1215.1,
+                        1153.9
+                    ],
+                    "img": "6/riftBigHamper/398cf97a1c2299d1054b15e24eb124fb"
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1331.1,
+                        1028.5
+                    ],
+                    "img": "6/riftBigHamper/2fa9eecdf41b9717297a4fbcbcacada6"
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1372.7,
+                        1034.9
+                    ],
+                    "img": "6/riftBigHamper/7d11f6de605a96db7a3e821e290ba73d"
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1454.3,
+                        1219.8
+                    ],
+                    "img": "6/riftBigHamper/b444c735ec33cd67a46db460ee5cf5f1"
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1181.1,
+                        1334.1
+                    ],
+                    "img": "6/riftBigHamper/8ea01ed4999ea4e2acbd9f6d88224609",
+                    "layer": 1
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1254.7,
+                        1233.5
+                    ],
+                    "img": "6/riftBigHamper/c732f961f4b646ed51902a68d546c129",
+                    "layer": 1
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1010.1,
+                        1189.9
+                    ],
+                    "img": "6/riftBigHamper/0060cbea1c3cfb8359cb4c0aaff3afcd"
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1189.9,
+                        1266.1
+                    ],
+                    "img": "6/riftBigHamper/d73b18e52a8e2031bef2bc9ee86e9ced"
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1194.6,
+                        902
+                    ],
+                    "img": "6/riftBigHamper/ec4131a5753fc0dd2d36fcf634b9404d"
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1304.1,
+                        955.2
+                    ],
+                    "img": "6/riftBigHamper/022dafd28c3d9885e9194c0ae91ca6f8"
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1338.9,
+                        913.7
+                    ],
+                    "img": "6/riftBigHamper/0af5babcbecfc32bd469d860320f357d"
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1392.9,
+                        944.5
+                    ],
+                    "img": "6/riftBigHamper/a3a09839b60b96ce9efe03869e2d8337"
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1036.2,
+                        1138.5
+                    ],
+                    "img": "6/riftBigHamper/e6b77243265acdcb3bf049a24a8c0d4f",
+                    "layer": 1
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1036.3,
+                        1168.7
+                    ],
+                    "img": "6/riftBigHamper/2ff16dfd2175b4a0c21314c95bcc4d3e",
+                    "layer": 1
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1037.9,
+                        1025
+                    ],
+                    "img": "6/riftBigHamper/b3009bea1ec2e389f0c182c85ff9817e",
+                    "layer": 1
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1112.6,
+                        1127.9
+                    ],
+                    "img": "6/riftBigHamper/1afc23987f0d5a04b69f3ae88687a0bc",
+                    "layer": 1
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1121.9,
+                        908
+                    ],
+                    "img": "6/riftBigHamper/a1c4d5117b164da9634c4c95655fb01d"
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1152.4,
+                        881.5
+                    ],
+                    "img": "6/riftBigHamper/4ffb34026d1bd49478aecdf66b7f7dd9"
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1106.7,
+                        1032
+                    ],
+                    "img": "6/riftBigHamper/d7cc3d3a1c7ac2d8039148e685018652",
+                    "layer": 1
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1187.8,
+                        1294.7
+                    ],
+                    "img": "6/riftBigHamper/860c91559e899662bf081181debffa38",
+                    "layer": 1
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1319.8,
+                        878.4
+                    ],
+                    "img": "6/riftBigHamper/26d040b406455fbdfb43d9a2d4b7eafc"
+                },
+                {
+                    "type": "riftBigHamper",
+                    "pos": [
+                        1346.5,
+                        760
+                    ],
+                    "img": "6/riftBigHamper/3a9b4accb78c1e27a1b1028731296e93"
+                }
+            ]
+        },
+        "riftSmallHamper": {
+            "MarkerList": [
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1119.3,
+                        889.4
+                    ],
+                    "img": "6/riftSmallHamper/1e749113a44dbc5cba2674229332389f"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1269.2,
+                        1122.5
+                    ],
+                    "img": "6/riftSmallHamper/e3bd9f6ca391788182701499a8f76253"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1305.1,
+                        1144.8
+                    ],
+                    "img": "6/riftSmallHamper/dbe708a89e9c0bee645e78594ce22bbd"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1343.5,
+                        949.2
+                    ],
+                    "img": "6/riftSmallHamper/270bb902b455d91cf3ed0bf6f34d6100"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1442.8,
+                        1228
+                    ],
+                    "img": "6/riftSmallHamper/d7887115e413c4a46a6b09f6b3cf3365"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1443,
+                        1230.9
+                    ],
+                    "img": "6/riftSmallHamper/eb8f8b7f6f1bc7b38d1faeaa54d04fea"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1459.6,
+                        1207
+                    ],
+                    "img": "6/riftSmallHamper/2b4c33dd3a7345eada16c72b530d7ce3"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1459.6,
+                        1215.1
+                    ],
+                    "img": "6/riftSmallHamper/f3fc14ccfa7235456f94b7c076ecad18"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1270.8,
+                        1225
+                    ],
+                    "img": "6/riftSmallHamper/a849c41af13ac735460647a80acc9808",
+                    "layer": 1
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1015.9,
+                        1203.1
+                    ],
+                    "img": "6/riftSmallHamper/5a75135f161cb9cf54213f38b8f3d952"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1095.5,
+                        886.2
+                    ],
+                    "img": "6/riftSmallHamper/d650f42d7880315e5a513d8d6c8e4ded"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1151.3,
+                        1091.8
+                    ],
+                    "img": "6/riftSmallHamper/e559739ba3df2dac7266109a2ed26a44"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1181,
+                        925.2
+                    ],
+                    "img": "6/riftSmallHamper/9bf30f766ba1df827a7753cc3f44dcc8"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1369.2,
+                        988.5
+                    ],
+                    "img": "6/riftSmallHamper/8ed515775d696cfba4b3b2ed8243fe5c"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1041,
+                        1142.2
+                    ],
+                    "img": "6/riftSmallHamper/da6a9cf933a2a9db838b1ff1471a281d",
+                    "layer": 1
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1305,
+                        1000.5
+                    ],
+                    "img": "6/riftSmallHamper/bf874ba84eed622718f59f7f7797a5ec",
+                    "layer": 1
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1331.6,
+                        962.2
+                    ],
+                    "img": "6/riftSmallHamper/140f6c7e68a9ae97b036431ea70772b0"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1520.6,
+                        950.6
+                    ],
+                    "img": "6/riftSmallHamper/1962f0cb2235a62e3e1c14750b920a7c"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1260.8,
+                        1143.2
+                    ],
+                    "img": "6/riftSmallHamper/34be275b04a5ce0fff7f8745a46f63a5",
+                    "layer": 1
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1261.6,
+                        1151.4
+                    ],
+                    "img": "6/riftSmallHamper/546d85bdb7208f22d4865776ba8a563e",
+                    "layer": 1
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1324.7,
+                        1172.3
+                    ],
+                    "img": "6/riftSmallHamper/7ac5e7f6acadfb92c89f63e134e2321b",
+                    "layer": 1
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1329.2,
+                        1109.9
+                    ],
+                    "img": "6/riftSmallHamper/4a74cca144faf0ff9019c1c48fc0e527",
+                    "layer": 1
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        968.4,
+                        1022.7
+                    ],
+                    "img": "6/riftSmallHamper/f48e3b8b65dffb665ce7f9cdedfe3a30"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        969.3,
+                        1014.8
+                    ],
+                    "img": "6/riftSmallHamper/feb91691cf72bb5df2d3fa4731f24c5f"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        972.4,
+                        1019.1
+                    ],
+                    "img": "6/riftSmallHamper/472b5f38274fc0e690ba56a25c342f15"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1082.5,
+                        974.3
+                    ],
+                    "img": "6/riftSmallHamper/305931acdea76c80d6b84e92293fdc18",
+                    "layer": 1
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1083.8,
+                        981.4
+                    ],
+                    "img": "6/riftSmallHamper/8149fdd223a3970eb8c5ad8d038842b8",
+                    "layer": 1
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1155.9,
+                        1227.4
+                    ],
+                    "img": "6/riftSmallHamper/9d078c949f90cad1c740641ef207bdaa"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1180.5,
+                        1078.7
+                    ],
+                    "img": "6/riftSmallHamper/7f661608ab876e3ddbcf1429dc6505f6"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1309.4,
+                        885
+                    ],
+                    "img": "6/riftSmallHamper/01bd7a81dfe7c9a2e7df2a7b14be2473"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1478.4,
+                        915
+                    ],
+                    "img": "6/riftSmallHamper/09964113661f3aae9c7b30434f36c864"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1506.3,
+                        976.5
+                    ],
+                    "img": "6/riftSmallHamper/ed02b2d443ffbf395f85a6f5f76b3a39"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1526.9,
+                        982.8
+                    ],
+                    "img": "6/riftSmallHamper/d0f60f63f82c3721fdb4b829697bb29e"
+                },
+                {
+                    "type": "riftSmallHamper",
+                    "pos": [
+                        1237.3,
+                        1223.2
+                    ],
+                    "img": "6/riftSmallHamper/b08cb25e1ad2ec681788f536a02cceb8",
+                    "layer": 1
+                }
+            ]
+        },
+        "riftCaveKey": {
+            "MarkerList": [
+                {
+                    "type": "riftCaveKey",
+                    "pos": [
+                        1457.3,
+                        1219.2
+                    ],
+                    "img": "6/riftCaveKey/139dbbd1e97048e69e112b25e312169c"
+                },
+                {
+                    "type": "riftCaveKey",
+                    "pos": [
+                        1205.8,
+                        877.4
+                    ],
+                    "img": "6/riftCaveKey/0d560f23cbf865a58e92961a2a305f94",
+                    "layer": 1
+                },
+                {
+                    "type": "riftCaveKey",
+                    "pos": [
+                        1309.1,
+                        1159.9
+                    ],
+                    "img": "6/riftCaveKey/1424d52a48d27d7e6a33ed085c8144af",
+                    "layer": 1
+                },
+                {
+                    "type": "riftCaveKey",
+                    "pos": [
+                        1036.7,
+                        973.6
+                    ],
+                    "img": "6/riftCaveKey/43864059237a5130030ca8c7ef868ed0",
+                    "layer": 1
+                },
+                {
+                    "type": "riftCaveKey",
+                    "pos": [
+                        1209.5,
+                        1099.4
+                    ],
+                    "img": "6/riftCaveKey/e72792abbf94a89e7de7be9f0f733b90",
+                    "layer": 1
+                },
+                {
+                    "type": "riftCaveKey",
+                    "pos": [
+                        1265.7,
+                        1377.4
+                    ],
+                    "img": "6/riftCaveKey/ed8c29c989bbf3ad09216e1f9ca76224",
+                    "layer": 1
+                }
+            ]
+        },
+        "riftGoldRelic": {
+            "MarkerList": [
+                {
+                    "type": "riftGoldRelic",
+                    "pos": [
+                        1217.5,
+                        1285.9
+                    ],
+                    "img": "6/riftGoldRelic/d04bff8bdd5a0a3d64f2c3d8301e0fe0"
+                },
+                {
+                    "type": "riftGoldRelic",
+                    "pos": [
+                        1019,
+                        1022.6
+                    ],
+                    "img": "6/riftGoldRelic/5c7d52cd03315c209058b4b90db5cdc8",
+                    "layer": 1
+                },
+                {
+                    "type": "riftGoldRelic",
+                    "pos": [
+                        1185.4,
+                        714.6
+                    ],
+                    "img": "6/riftGoldRelic/d6ab9c950ea86e620123b8355467a207",
+                    "layer": 1
+                },
+                {
+                    "type": "riftGoldRelic",
+                    "pos": [
+                        1258.2,
+                        1208.1
+                    ],
+                    "img": "6/riftGoldRelic/4d63320da6212e98480b856e29fb0abc",
+                    "layer": 1
+                },
+                {
+                    "type": "riftGoldRelic",
+                    "pos": [
+                        1280.5,
+                        712.1
+                    ],
+                    "img": "6/riftGoldRelic/e7f66d2d1e81320fbed2211c773ac721",
+                    "layer": 1
+                },
+                {
+                    "type": "riftGoldRelic",
+                    "pos": [
+                        1280.8,
+                        1244.6
+                    ],
+                    "img": "6/riftGoldRelic/46d4c41f5260f771adbc5fc5159281bf",
+                    "layer": 1
+                },
+                {
+                    "type": "riftGoldRelic",
+                    "pos": [
+                        1288.6,
+                        847.3
+                    ],
+                    "img": "6/riftGoldRelic/6bfad0cac00e8c4f830b142508b6e408",
+                    "layer": 1
+                },
+                {
+                    "type": "riftGoldRelic",
+                    "pos": [
+                        1301,
+                        1153.5
+                    ],
+                    "img": "6/riftGoldRelic/e803064dc183f3a6427e541a029ae99e",
+                    "layer": 1
+                },
+                {
+                    "type": "riftGoldRelic",
+                    "pos": [
+                        996.4,
+                        862.1
+                    ],
+                    "img": "6/riftGoldRelic/065e7a4b50ab5c774f3dd04f1591f4d1",
+                    "layer": 1
+                },
+                {
+                    "type": "riftGoldRelic",
+                    "pos": [
+                        1068.4,
+                        1264
+                    ],
+                    "img": "6/riftGoldRelic/30a6753246a0c226fc14cdcc0876fbde"
+                },
+                {
+                    "type": "riftGoldRelic",
+                    "pos": [
+                        1394.9,
+                        976.2
+                    ],
+                    "img": "6/riftGoldRelic/e8c36590a578cb61ff80278f56de0ca1"
+                },
+                {
+                    "type": "riftGoldRelic",
+                    "pos": [
+                        1047.2,
+                        1072.6
+                    ],
+                    "img": "6/riftGoldRelic/b5c209725d76609290af1a55b555abc0",
+                    "layer": 1
+                },
+                {
+                    "type": "riftGoldRelic",
+                    "pos": [
+                        1302.4,
+                        1244.8
+                    ],
+                    "img": "6/riftGoldRelic/6518644039fc5fe9a42c308129e95369",
+                    "layer": 1
+                }
+            ]
+        },
+        "riftSecretExitPortal": {
+            "MarkerList": [
+                {
+                    "type": "riftSecretExitPortal",
+                    "pos": [
+                        1006.1,
+                        857.7
+                    ],
+                    "img": "6/riftSecretExitPortal/26c5d7db584b213836643e0ec33e5156",
+                    "layer": 1
+                },
+                {
+                    "type": "riftSecretExitPortal",
+                    "pos": [
+                        1261.1,
+                        1388.1
+                    ],
+                    "img": "6/riftSecretExitPortal/5433b8456734c5769e9e095d0a43a3c2",
+                    "layer": 1
+                },
+                {
+                    "type": "riftSecretExitPortal",
+                    "pos": [
+                        1379.5,
+                        832.8
+                    ],
+                    "img": "6/riftSecretExitPortal/edf748a6c21466644cf25f5894bb7487",
+                    "layer": 1
+                }
+            ]
+        },
+        "riftPiggyBank": {
+            "MarkerList": [
+                {
+                    "type": "riftPiggyBank",
+                    "pos": [
+                        1106.5,
+                        1019.7
+                    ],
+                    "img": "6/riftPiggyBank/d5b81b428a85b656a785df461ff23715",
+                    "layer": 1
+                },
+                {
+                    "type": "riftPiggyBank",
+                    "pos": [
+                        1261.2,
+                        1148.8
+                    ],
+                    "img": "6/riftPiggyBank/57c7b6fc5244c1897cdbcd70670f8a36",
+                    "layer": 1
+                }
+            ]
+        },
+        "map": "6"
     }
 ]

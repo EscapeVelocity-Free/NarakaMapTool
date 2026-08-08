@@ -122,6 +122,8 @@ std::string GetMappingFileName(std::string type) {
         {"riftStronghold", "rift_stronghold"}, {"riftStrongholdBoss", "rift_stronghold_boss"},
         {"riftStrongholdMiniBoss", "rift_stronghold_mini_boss"}, {"riftWaterWell", "rift_water_well"},
         {"riftWeaponBox", "rift_weapon_box"}, {"helanArt", "helan_art"},
+        {"riftSeveredStatutes", "rift_severed_statutes"}, {"riftSoulCalmingBell", "rift_soul_calming_bell"},
+        {"riftSecretExitPortal", "rift_secret_exit_portal"},
         {"earthShrine", "prayer_shrine"}, {"ironUrchin", "iron_urchin"},
         {"ironbackTurtle", "ironback_turtle"}, {"spiritClam", "spirit_clam"}
     };
@@ -129,13 +131,14 @@ std::string GetMappingFileName(std::string type) {
     return type;
 }
 
-static std::string ResolveMapBackgroundName(const std::string& mapId) {
+static std::string ResolveMapBackgroundName(const std::string& mapId, int layer) {
     if (mapId == "0") return "morus_3.png";
     if (mapId == "1") return "holoroth_3.png";
     if (mapId == "2") return "dragon_3.png";
     if (mapId == "3") return "fqhl.png";
     if (mapId == "4") return "rivers_runs_red.png";
     if (mapId == "5") return "wanchu.png";
+    if (mapId == "6") return layer == 1 ? "stormchant_underground.png" : "stormchant.png";
     return {};
 }
 
@@ -162,19 +165,47 @@ void OverlayWindow::setMap(const std::string& mapId, const std::string& mapName)
         m_currentMapId, mapId, mapName, m_showBackground);
     m_currentMapId = mapId;
     m_currentMapName = mapName;
+    m_currentLayer = 0;
     m_routeStartId.clear();
     m_excludedPointIds.clear();
     m_routeOrder.clear();
 
-    if (m_bgImg) { 
-        delete m_bgImg; 
-        m_bgImg = nullptr; 
+    loadMapBackground();
+    loadData();
+    invalidate();
+}
+
+void OverlayWindow::setMapLayer(int layer) {
+    if (layer < 0 || layer > 1) {
+        Logger::warn("Ignoring invalid map layer: map_id={} layer={}", m_currentMapId, layer);
+        return;
     }
-    
+    if (m_currentMapId != "6") {
+        m_currentLayer = 0;
+        return;
+    }
+    if (m_currentLayer == layer) {
+        return;
+    }
+
+    Logger::info("Overlay map layer switch requested: map_id={} previous_layer={} target_layer={}",
+        m_currentMapId, m_currentLayer, layer);
+    m_currentLayer = layer;
+    loadMapBackground();
+    loadData();
+    invalidate();
+}
+
+void OverlayWindow::loadMapBackground() {
+    if (m_bgImg) {
+        delete m_bgImg;
+        m_bgImg = nullptr;
+    }
+
     try {
-        std::string fileName = ResolveMapBackgroundName(mapId);
+        std::string fileName = ResolveMapBackgroundName(m_currentMapId, m_currentLayer);
         if (fileName.empty()) {
-            Logger::warn("Unknown map selection: id={} name={}", mapId, mapName);
+            Logger::warn("Unknown map selection: id={} name={}", m_currentMapId, m_currentMapName);
         }
 
         fs::path fullPath = fs::u8path(ConfigManager::mapImagePath) / fileName;
@@ -194,19 +225,15 @@ void OverlayWindow::setMap(const std::string& mapId, const std::string& mapName)
                 m_bgImg = nullptr;
             }
             else {
-                Logger::info("Map switched successfully: {} ({})", mapId, mapName);
-                Logger::info("Map background loaded: id={} name={} file={} dimensions={}x{}",
-                    mapId, mapName, fullPath.string(), m_bgImg->GetWidth(), m_bgImg->GetHeight());
+                Logger::info("Map background loaded: id={} name={} layer={} file={} dimensions={}x{}",
+                    m_currentMapId, m_currentMapName, m_currentLayer, fullPath.string(),
+                    m_bgImg->GetWidth(), m_bgImg->GetHeight());
             }
         }
     }
     catch (const std::exception& e) {
         Logger::error("Critical error during map switching: {}", e.what());
     }
-
-
-    loadData();
-    invalidate();
 }
 
 void OverlayWindow::init(HINSTANCE hInst) {
@@ -280,6 +307,9 @@ void OverlayWindow::loadData() {
                         ++selectedTypeEntries;
                         size_t markerIndex = 0;
                         for (auto& marker : item[key]["MarkerList"]) {
+                            if (m_currentMapId == "6" && marker.value("layer", 0) != m_currentLayer) {
+                                continue;
+                            }
                             double gx = 0, gy = 0;
                             auto& pos = marker["pos"];
                             if (pos[0].is_string()) gx = std::stod(pos[0].get<std::string>());
@@ -313,8 +343,9 @@ void OverlayWindow::loadData() {
             m_routeStartId.clear();
         }
         rebuildRoute();
-        Logger::info("Resource data loaded: map_id={} map_entries={} matched_resource_types={} active_points={} excluded_points={} route_points={}",
-            m_currentMapId, matchingMapEntries, selectedTypeEntries, m_points.size(), m_excludedPointIds.size(), m_routeOrder.size());
+        Logger::info("Resource data loaded: map_id={} layer={} map_entries={} matched_resource_types={} active_points={} excluded_points={} route_points={}",
+            m_currentMapId, m_currentLayer, matchingMapEntries, selectedTypeEntries, m_points.size(),
+            m_excludedPointIds.size(), m_routeOrder.size());
     }
     catch (...) {
         Logger::error("loadData error");

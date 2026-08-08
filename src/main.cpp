@@ -68,6 +68,10 @@ int main(int argc, char* argv[]) {
         Logger::info("Main bridge received map change: id={} name={}", id, name);
         overlay.setMap(id, name);
         });
+    QObject::connect(&panel, &ControlPanel::layerChanged, [&](int layer) {
+        Logger::info("Main bridge received map layer change: layer={}", layer);
+        overlay.setMapLayer(layer);
+        });
     QObject::connect(&panel, &ControlPanel::selectionChanged, [&](const std::vector<std::string>& keys) {
         Logger::info("Main bridge received resource selection update: key_count={}", keys.size());
         overlay.updateResources(keys);

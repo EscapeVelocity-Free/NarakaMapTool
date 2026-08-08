@@ -21,6 +21,7 @@ public:
 
     void init(HINSTANCE hInst);
     void setMap(const std::string& mapId, const std::string& mapName);
+    void setMapLayer(int layer);
     void updateResources(const std::vector<std::string>& keys);
     void handleAltAction();
     void toggleRouteVisible();
@@ -36,6 +37,7 @@ private:
     static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
     void paint(HDC hdc);
     void loadData();
+    void loadMapBackground();
     Gdiplus::Image* GetIcon(std::string type);
     void rebuildRoute();
     void drawRoute(Gdiplus::Graphics& g);
@@ -48,6 +50,7 @@ private:
 
     std::string m_currentMapId;
     std::string m_currentMapName; // 当前地图名称
+    int m_currentLayer = 0;
     std::vector<std::string> m_activeKeys;
 
     struct Point {
