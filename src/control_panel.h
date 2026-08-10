@@ -11,7 +11,10 @@
 #include <string>
 #include <vector>
 
+#include "resource_catalog.h"
+
 class QLabel;
+class QGridLayout;
 
 class ControlPanel : public QWidget {
     Q_OBJECT
@@ -32,7 +35,12 @@ private:
     struct ResourceGroup;
     struct ResourceBinding {
         std::string key;
-        bool riftOnly;
+    };
+    struct ResourceSectionView {
+        QFrame* card;
+        QGridLayout* grid;
+        int columns;
+        std::vector<QPushButton*> buttons;
     };
 
     static std::vector<ResourceGroup> buildResourceGroups();
@@ -40,20 +48,21 @@ private:
     void setupStyle();
     QFrame* createHeaderCard();
     QFrame* createResourceSection(const ResourceGroup& group);
-    QPushButton* createResourceChip(const ResourceItem& item, bool riftOnly);
+    QPushButton* createResourceChip(const ResourceItem& item);
     QPushButton* createCommandButton(const QString& text, const QString& objectName);
     void applyCardShadow(QFrame* card);
     void connectActions(QPushButton* selectAllButton, QPushButton* clearAllButton, QCheckBox* showBackgroundBox);
-    bool isRiftMapSelected() const;
     bool isStormchantMapSelected() const;
     bool isResourceAvailable(const ResourceBinding& binding) const;
-    void updateRiftSectionVisibility();
+    int currentLayer() const;
+    void refreshResourceVisibility();
     void updateLayerSelectorVisibility();
     void setAllResourcesChecked(bool checked);
     void notifySelectionChanged();
 
     std::map<QAbstractButton*, ResourceBinding> m_resourceButtons;
-    std::vector<QFrame*> m_riftOnlySections;
+    std::vector<ResourceSectionView> m_resourceSections;
+    ResourceCatalog m_resourceCatalog;
     QComboBox* m_mapCombo = nullptr;
     QLabel* m_layerLabel = nullptr;
     QComboBox* m_layerCombo = nullptr;

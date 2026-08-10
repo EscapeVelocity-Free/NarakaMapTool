@@ -12,9 +12,12 @@
 #include <QTimer>
 #include <QVBoxLayout>
 
+#include <filesystem>
 #include <sstream>
 #include <set>
+#include <utility>
 
+#include "config_manager.h"
 #include "logger.h"
 
 #pragma execution_character_set("utf-8")
@@ -28,7 +31,6 @@ struct ControlPanel::ResourceGroup {
     const char* title;
     const char* subtitle;
     int columns;
-    bool riftOnly;
     std::vector<ResourceItem> items;
 };
 
@@ -53,7 +55,9 @@ std::string JoinResourceKeys(const std::vector<std::string>& keys) {
 
 }
 
-ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent) {
+ControlPanel::ControlPanel(QWidget* parent)
+    : QWidget(parent),
+      m_resourceCatalog((std::filesystem::path(ConfigManager::resourcePath) / "resources_naraka.json").string()) {
     setupWindow();
     setupStyle();
 
@@ -83,11 +87,12 @@ ControlPanel::ControlPanel(QWidget* parent) : QWidget(parent) {
     scrollArea->setWidget(content);
     rootLayout->addWidget(scrollArea, 1);
 
-    updateRiftSectionVisibility();
     updateLayerSelectorVisibility();
+    refreshResourceVisibility();
     QTimer::singleShot(100, this, &ControlPanel::notifySelectionChanged);
-    Logger::info("Control panel initialized: resource_controls={} rift_sections={} default_map_id={}",
-        m_resourceButtons.size(), m_riftOnlySections.size(), m_mapCombo->currentData().toString().toStdString());
+    Logger::info("Control panel initialized: resource_controls={} sections={} catalog_loaded={} default_map_id={}",
+        m_resourceButtons.size(), m_resourceSections.size(), m_resourceCatalog.isLoaded(),
+        m_mapCombo->currentData().toString().toStdString());
 }
 
 std::vector<ControlPanel::ResourceGroup> ControlPanel::buildResourceGroups() {
@@ -96,7 +101,6 @@ std::vector<ControlPanel::ResourceGroup> ControlPanel::buildResourceGroups() {
             "常用消耗 · 采集",
             "高频路线点，适合日常跑图",
             7,
-            false,
             {
                 {"萤火虫", "firefly"}, {"许愿井", "wishingWell"}, {"小土地", "miniShrine"},
                 {"金蟾", "goldenToad"}, {"鸟靶", "flyingTarget"}, {"萤火笼", "fireflyCage"},
@@ -108,7 +112,6 @@ std::vector<ControlPanel::ResourceGroup> ControlPanel::buildResourceGroups() {
             "任务 · 挑战",
             "卷轴、悬赏、地脉等关键交互",
             5,
-            false,
             {
                 {"任务(卷轴)", "questSerialCache"}, {"任务2", "questCache"}, {"任务土地", "questShrine"},
                 {"任务钟", "questBell"}, {"悬赏", "bounty"}, {"叫阵", "reverseBounty"}, {"地脉仪", "strongPoint"}
@@ -118,7 +121,6 @@ std::vector<ControlPanel::ResourceGroup> ControlPanel::buildResourceGroups() {
             "重要设施",
             "商店、返魂台、洞穴与功能设施",
             7,
-            false,
             {
                 {"商店", "riftDealer"}, {"返魂台", "soulAltar"}, {"武器架", "weaponRack"},
                 {"宝库", "treasureCave"}, {"奥义封印", "forbiddenSeal"}, {"回阳镜", "gateOfYang"},
@@ -130,7 +132,6 @@ std::vector<ControlPanel::ResourceGroup> ControlPanel::buildResourceGroups() {
             "其他",
             "地图上的补充资源点",
             7,
-            false,
             {
                 {"金堆", "gold"}, {"绿堆", "green"}, {"漂浮堆", "floatingPile"},
                 {"钟", "bell"}, {"攻城弩", "ballista"}, {"滴滴打车", "soaringArm"},
@@ -146,7 +147,6 @@ std::vector<ControlPanel::ResourceGroup> ControlPanel::buildResourceGroups() {
             "摸金",
             "裂隙宝箱、机关与收藏容器",
             7,
-            true,
             {
                 {"博火箱·史诗", "riftChestEpic"},
                 {"博火箱·史诗(必中)", "riftChestEpicGuaranteed"},
@@ -461,9 +461,6 @@ QFrame* ControlPanel::createResourceSection(const ResourceGroup& group) {
     auto* card = new QFrame(this);
     card->setObjectName("sectionCard");
     applyCardShadow(card);
-    if (group.riftOnly) {
-        m_riftOnlySections.push_back(card);
-    }
 
     auto* layout = new QVBoxLayout(card);
     layout->setContentsMargins(18, 14, 18, 16);
@@ -486,14 +483,10 @@ QFrame* ControlPanel::createResourceSection(const ResourceGroup& group) {
     grid->setHorizontalSpacing(9);
     grid->setVerticalSpacing(9);
 
-    int row = 0;
-    int col = 0;
+    ResourceSectionView section{card, grid, group.columns, {}};
+    section.buttons.reserve(group.items.size());
     for (const auto& item : group.items) {
-        grid->addWidget(createResourceChip(item, group.riftOnly), row, col);
-        if (++col >= group.columns) {
-            col = 0;
-            ++row;
-        }
+        section.buttons.push_back(createResourceChip(item));
     }
 
     for (int i = 0; i < group.columns; ++i) {
@@ -501,16 +494,17 @@ QFrame* ControlPanel::createResourceSection(const ResourceGroup& group) {
     }
 
     layout->addLayout(grid);
+    m_resourceSections.push_back(std::move(section));
     return card;
 }
 
-QPushButton* ControlPanel::createResourceChip(const ResourceItem& item, bool riftOnly) {
+QPushButton* ControlPanel::createResourceChip(const ResourceItem& item) {
     auto* button = new QPushButton(QString::fromUtf8(item.name), this);
     button->setObjectName("resourceChip");
     button->setCheckable(true);
     button->setCursor(Qt::PointingHandCursor);
     button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    m_resourceButtons[button] = ResourceBinding{item.key, riftOnly};
+    m_resourceButtons[button] = ResourceBinding{item.key};
 
     if (DefaultResourceKeys().count(item.key)) {
         button->setChecked(true);
@@ -549,9 +543,9 @@ void ControlPanel::connectActions(QPushButton* selectAllButton, QPushButton* cle
         Logger::info("Control panel map selection changed: id={} name={}",
             m_mapCombo->currentData().toString().toStdString(), m_mapCombo->currentText().toStdString());
         emit mapChanged(m_mapCombo->currentData().toString().toStdString(), m_mapCombo->currentText().toStdString());
-        updateRiftSectionVisibility();
         updateLayerSelectorVisibility();
         emit layerChanged(0);
+        refreshResourceVisibility();
         notifySelectionChanged();
     });
 
@@ -564,6 +558,8 @@ void ControlPanel::connectActions(QPushButton* selectAllButton, QPushButton* cle
             m_mapCombo->currentData().toString().toStdString(), layer,
             m_layerCombo->currentText().toStdString());
         emit layerChanged(layer);
+        refreshResourceVisibility();
+        notifySelectionChanged();
     });
 
     connect(selectAllButton, &QPushButton::clicked, [this]() {
@@ -577,30 +573,64 @@ void ControlPanel::connectActions(QPushButton* selectAllButton, QPushButton* cle
     });
 }
 
-bool ControlPanel::isRiftMapSelected() const {
-    if (!m_mapCombo) {
-        return false;
-    }
-
-    const QString mapId = m_mapCombo->currentData().toString();
-    return mapId == "3" || mapId == "4" || mapId == "6";
-}
-
 bool ControlPanel::isStormchantMapSelected() const {
     return m_mapCombo && m_mapCombo->currentData().toString() == "6";
 }
 
 bool ControlPanel::isResourceAvailable(const ResourceBinding& binding) const {
-    return !binding.riftOnly || isRiftMapSelected();
+    if (!m_mapCombo) {
+        return false;
+    }
+    return m_resourceCatalog.isAvailable(
+        m_mapCombo->currentData().toString().toStdString(), binding.key, currentLayer());
 }
 
-void ControlPanel::updateRiftSectionVisibility() {
-    const bool showRiftSections = isRiftMapSelected();
-    Logger::info("Control panel rift resource section visibility: visible={} map_id={}",
-        showRiftSections, m_mapCombo ? m_mapCombo->currentData().toString().toStdString() : "<unset>");
-    for (auto* section : m_riftOnlySections) {
-        section->setVisible(showRiftSections);
+int ControlPanel::currentLayer() const {
+    if (!isStormchantMapSelected() || !m_layerCombo) {
+        return 0;
     }
+    return m_layerCombo->currentData().toInt();
+}
+
+void ControlPanel::refreshResourceVisibility() {
+    const std::string mapId = m_mapCombo ? m_mapCombo->currentData().toString().toStdString() : "<unset>";
+    const int layer = currentLayer();
+    std::size_t visibleResourceCount = 0;
+    std::size_t visibleSectionCount = 0;
+
+    for (auto& section : m_resourceSections) {
+        while (auto* item = section.grid->takeAt(0)) {
+            delete item;
+        }
+
+        int row = 0;
+        int col = 0;
+        bool hasVisibleResource = false;
+        for (auto* button : section.buttons) {
+            const auto bindingIt = m_resourceButtons.find(button);
+            const bool visible = bindingIt != m_resourceButtons.end() && isResourceAvailable(bindingIt->second);
+            button->setVisible(visible);
+            if (!visible) {
+                continue;
+            }
+
+            hasVisibleResource = true;
+            ++visibleResourceCount;
+            section.grid->addWidget(button, row, col);
+            if (++col >= section.columns) {
+                col = 0;
+                ++row;
+            }
+        }
+
+        section.card->setVisible(hasVisibleResource);
+        if (hasVisibleResource) {
+            ++visibleSectionCount;
+        }
+    }
+
+    Logger::info("Control panel resource visibility refreshed: map_id={} layer={} visible_sections={} visible_resource_types={}",
+        mapId, layer, visibleSectionCount, visibleResourceCount);
 }
 
 void ControlPanel::updateLayerSelectorVisibility() {

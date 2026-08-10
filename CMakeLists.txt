@@ -16,6 +16,7 @@ set(SOURCES
     src/overlay_window.cpp
     src/map_status_detector.cpp
     src/config_manager.cpp
+    src/resource_catalog.cpp
 )
 
 # Windows 资源文件（exe 图标 + 版本信息），仅 MSVC 下编译
@@ -57,7 +58,7 @@ set(CPACK_SOURCE_GENERATOR "") # 禁用源码包生成
 # 设置包的基本信息
 set(CPACK_PACKAGE_NAME "NarakaMapTool")
 set(CPACK_PACKAGE_VENDOR "StarStudio")
-set(CPACK_PACKAGE_VERSION "1.2.3")
+set(CPACK_PACKAGE_VERSION "1.3.0")
 set(CPACK_GENERATOR "ZIP")
 
 # 1. 指定可执行文件
