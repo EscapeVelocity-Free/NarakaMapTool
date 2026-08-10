@@ -137,7 +137,9 @@ std::vector<ControlPanel::ResourceGroup> ControlPanel::buildResourceGroups() {
                 {"捕兽夹", "bearTrap"}, {"野生动物", "wildlife"}, {"烤火", "bonfire"},
                 {"疗愈之树", "healingTree"}, {"老鼠", "rat"}, {"土地庙", "earthShrine"},
                 {"铁蒺藜", "ironUrchin"}, {"铁棘龟", "ironbackTurtle"}, {"灵蚌", "spiritClam"},
-                {"铜钱", "treasureCoin"}
+                {"铜钱", "treasureCoin"}, {"神仙鱼", "angelfish"}, {"青雀鱼", "azureFinchFish"},
+                {"碧波珊瑚", "azureWaveCoralline"}, {"金焰珊瑚", "goldenFlameCoralline"},
+                {"巨蜥", "grandLizard"}, {"刺尾鱼", "stingtailFish"}, {"紫珊瑚", "violetCoralline"}
             }
         },
         {

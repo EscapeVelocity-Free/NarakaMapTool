@@ -125,7 +125,11 @@ std::string GetMappingFileName(std::string type) {
         {"riftSeveredStatutes", "rift_severed_statutes"}, {"riftSoulCalmingBell", "rift_soul_calming_bell"},
         {"riftSecretExitPortal", "rift_secret_exit_portal"},
         {"earthShrine", "prayer_shrine"}, {"ironUrchin", "iron_urchin"},
-        {"ironbackTurtle", "ironback_turtle"}, {"spiritClam", "spirit_clam"}
+        {"ironbackTurtle", "ironback_turtle"}, {"spiritClam", "spirit_clam"},
+        {"angelfish", "angelfish"}, {"azureFinchFish", "azure_finch_fish"},
+        {"azureWaveCoralline", "azure_wave_coralline"}, {"goldenFlameCoralline", "golden_flame_coralline"},
+        {"grandLizard", "grand_lizard"}, {"stingtailFish", "stingtail_fish"},
+        {"violetCoralline", "violet_coralline"}
     };
     if (nameMap.count(type)) return nameMap[type];
     return type;
