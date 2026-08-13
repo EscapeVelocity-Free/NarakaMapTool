@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.15)
 project(NarakaMapTool)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -58,7 +58,7 @@ set(CPACK_SOURCE_GENERATOR "") # 禁用源码包生成
 # 设置包的基本信息
 set(CPACK_PACKAGE_NAME "NarakaMapTool")
 set(CPACK_PACKAGE_VENDOR "StarStudio")
-set(CPACK_PACKAGE_VERSION "1.3.0")
+set(CPACK_PACKAGE_VERSION "1.3.1")
 set(CPACK_GENERATOR "ZIP")
 
 # 1. 指定可执行文件

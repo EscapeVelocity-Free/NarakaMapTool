@@ -39,6 +39,7 @@ private:
     void loadData();
     void loadMapBackground();
     Gdiplus::Image* GetIcon(std::string type);
+    Gdiplus::Image* GetZoneImage(const std::string& zoneId);
     void rebuildRoute();
     void drawRoute(Gdiplus::Graphics& g);
     void drawRouteMarkerState(Gdiplus::Graphics& g, const Point& pt, int localX, int localY);
@@ -58,12 +59,23 @@ private:
         std::string type;
         int absX; // 屏幕绝对像素X
         int absY; // 屏幕绝对像素Y
+        int radius = 0; // 范围圆半径（屏幕像素），0 表示不绘制
+    };
+    struct Zone {
+        std::string id;      // 稳定ID（区域图片名）
+        std::string type;    // "highResourceZone"
+        int absX;            // 区域中心屏幕绝对像素X
+        int absY;            // 区域中心屏幕绝对像素Y
+        int absHalfW;        // 区域半宽（屏幕像素）
+        int absHalfH;        // 区域半高（屏幕像素）
     };
     std::vector<Point> m_points;
+    std::vector<Zone> m_zones;
     std::vector<size_t> m_routeOrder;
     std::set<std::string> m_excludedPointIds;
     std::string m_routeStartId;
     std::map<std::string, Gdiplus::Image*> m_iconCache;
+    std::map<std::string, Gdiplus::Image*> m_zoneImageCache;
     Gdiplus::Image* m_bgImg;
 
     int m_winX;

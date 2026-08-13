@@ -125,7 +125,7 @@ std::vector<ControlPanel::ResourceGroup> ControlPanel::buildResourceGroups() {
                 {"商店", "riftDealer"}, {"返魂台", "soulAltar"}, {"武器架", "weaponRack"},
                 {"宝库", "treasureCave"}, {"奥义封印", "forbiddenSeal"}, {"回阳镜", "gateOfYang"},
                 {"食人花", "carnivorousYam"}, {"雪莲", "snowLotus"}, {"泉源", "springSource"},
-                {"贺兰艺", "helanArt"}
+                {"贺兰艺", "helanArt"}, {"高资源区", "highResourceZone"}
             }
         },
         {

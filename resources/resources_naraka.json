@@ -7350,6 +7350,350 @@
                 }
             ]
         },
+        "highResourceZone": {
+            "MarkerList": [
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1620.4081,
+                        369.6327
+                    ],
+                    "img": "high_resource_zones/bailiandong",
+                    "halfW": 136.998,
+                    "halfH": 145.512
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1441.8184,
+                        1469.8181
+                    ],
+                    "img": "high_resource_zones/luorisi",
+                    "halfW": 154.026,
+                    "halfH": 172.602
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        249.09093,
+                        1444.3635
+                    ],
+                    "img": "high_resource_zones/mingjingtai",
+                    "halfW": 139.707,
+                    "halfH": 147.877
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        216.00002,
+                        1035.2
+                    ],
+                    "img": "high_resource_zones/danshicaolu",
+                    "halfW": 133.5687,
+                    "halfH": 140.438
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        312.55817,
+                        740.09296
+                    ],
+                    "img": "high_resource_zones/yajiao",
+                    "halfW": 130.806,
+                    "halfH": 109.908
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        234.5946,
+                        247.99991
+                    ],
+                    "img": "high_resource_zones/yinzujihuisuo",
+                    "halfW": 110.6175,
+                    "halfH": 107.6075
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        582.3077,
+                        614.15393
+                    ],
+                    "img": "high_resource_zones/buzhoutan",
+                    "halfW": 186.534,
+                    "halfH": 168.732
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        644.6512,
+                        1751.2557
+                    ],
+                    "img": "high_resource_zones/qihuangju",
+                    "halfW": 172.602,
+                    "halfH": 86.688
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        825.8065,
+                        1618.3225
+                    ],
+                    "img": "high_resource_zones/senluogu",
+                    "halfW": 174.15,
+                    "halfH": 160.218
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        600.00006,
+                        1235
+                    ],
+                    "img": "high_resource_zones/xinhu",
+                    "halfW": 83.592,
+                    "halfH": 80.496
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        496.7742,
+                        996.3871
+                    ],
+                    "img": "high_resource_zones/anjifang",
+                    "halfW": 140.4702,
+                    "halfH": 104.3718
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        888.37213,
+                        1841.4884
+                    ],
+                    "img": "high_resource_zones/shaiwanglu",
+                    "halfW": 126.162,
+                    "halfH": 97.524
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        742.3256,
+                        947.5348
+                    ],
+                    "img": "high_resource_zones/tihuwuweifang",
+                    "halfW": 89.784,
+                    "halfH": 100.62
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        880.00006,
+                        822.88367
+                    ],
+                    "img": "high_resource_zones/xixintan",
+                    "halfW": 116.874,
+                    "halfH": 119.196
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        870.69775,
+                        524.279
+                    ],
+                    "img": "high_resource_zones/sanzudayisuo",
+                    "halfW": 130.806,
+                    "halfH": 98.298
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        942.3076,
+                        1092.6155
+                    ],
+                    "img": "high_resource_zones/bailianyao",
+                    "halfW": 73.53,
+                    "halfH": 137.772
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        730.00006,
+                        216.57124
+                    ],
+                    "img": "high_resource_zones/xianfeicun",
+                    "halfW": 98.298,
+                    "halfH": 92.106
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        954.54553,
+                        317.09076
+                    ],
+                    "img": "high_resource_zones/huangzhong",
+                    "halfW": 141.642,
+                    "halfH": 182.664
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1170.5884,
+                        1420.9412
+                    ],
+                    "img": "high_resource_zones/huangyehu",
+                    "halfW": 99.4375,
+                    "halfH": 135.235
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1179.3549,
+                        1170.5806
+                    ],
+                    "img": "high_resource_zones/shirencun",
+                    "halfW": 178.9875,
+                    "halfH": 86.7095
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1246.4001,
+                        636.79987
+                    ],
+                    "img": "high_resource_zones/yinyuanku",
+                    "halfW": 159.7558,
+                    "halfH": 117.5405
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1316.3638,
+                        409.81805
+                    ],
+                    "img": "high_resource_zones/sanhaokuangchang",
+                    "halfW": 106.038,
+                    "halfH": 84.366
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1185.946,
+                        169.08098
+                    ],
+                    "img": "high_resource_zones/liuyingdong",
+                    "halfW": 156.047,
+                    "halfH": 123.367
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1154.7826,
+                        886.26086
+                    ],
+                    "img": "high_resource_zones/tianrencheng",
+                    "halfW": 168.7212,
+                    "halfH": 110.6497
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1876.4707,
+                        219.76463
+                    ],
+                    "img": "high_resource_zones/haishalou",
+                    "halfW": 88.0425,
+                    "halfH": 109.865
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1527.442,
+                        604.279
+                    ],
+                    "img": "high_resource_zones/erhaokuangchang",
+                    "halfW": 115.326,
+                    "halfH": 89.01
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1840,
+                        771.8709
+                    ],
+                    "img": "high_resource_zones/moguiyuan",
+                    "halfW": 113.7565,
+                    "halfH": 148.7585
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1430.9678,
+                        1067.3549
+                    ],
+                    "img": "high_resource_zones/wanshici",
+                    "halfW": 128.0755,
+                    "halfH": 88.3005
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1580.0001,
+                        1011.52936
+                    ],
+                    "img": "high_resource_zones/yachao",
+                    "halfW": 115.3475,
+                    "halfH": 119.325
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1834.9089,
+                        1133.091
+                    ],
+                    "img": "high_resource_zones/jinaocun",
+                    "halfW": 130.032,
+                    "halfH": 113.004
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1858.3784,
+                        1357.1892
+                    ],
+                    "img": "high_resource_zones/yabianyuexiating",
+                    "halfW": 126.162,
+                    "halfH": 138.546
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1688.9796,
+                        1527.1837
+                    ],
+                    "img": "high_resource_zones/chencun",
+                    "halfW": 110.682,
+                    "halfH": 163.314
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1815.4839,
+                        1800.258
+                    ],
+                    "img": "high_resource_zones/zhulinjian",
+                    "halfW": 106.812,
+                    "halfH": 196.596
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1537.143,
+                        1843.7142
+                    ],
+                    "img": "high_resource_zones/cangcuiju",
+                    "halfW": 192.726,
+                    "halfH": 121.518
+                }
+            ]
+        },
         "map": "0"
     },
     {
@@ -14128,6 +14472,350 @@
                 }
             ]
         },
+        "highResourceZone": {
+            "MarkerList": [
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1054.4001,
+                        1014.3999
+                    ],
+                    "img": "high_resource_zones/shenyingbao",
+                    "halfW": 181.7825,
+                    "halfH": 249.185
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1438.5715,
+                        1866.5714
+                    ],
+                    "img": "high_resource_zones/shenmuya",
+                    "halfW": 84.925,
+                    "halfH": 91.375
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1401.4287,
+                        1615.1428
+                    ],
+                    "img": "high_resource_zones/changshengzhai",
+                    "halfW": 181.89,
+                    "halfH": 169.3125
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1110.2704,
+                        1729.081
+                    ],
+                    "img": "high_resource_zones/chihouyingdi",
+                    "halfW": 150.8225,
+                    "halfH": 70.4662
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        899.45953,
+                        1648
+                    ],
+                    "img": "high_resource_zones/xueliancun",
+                    "halfW": 99.975,
+                    "halfH": 74.175
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        920.00006,
+                        1446.919
+                    ],
+                    "img": "high_resource_zones/tianyechi",
+                    "halfW": 103.2,
+                    "halfH": 88.15
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        610.00006,
+                        1195
+                    ],
+                    "img": "high_resource_zones/miwusenlin",
+                    "halfW": 95.675,
+                    "halfH": 142.975
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        753.793,
+                        1307.3104
+                    ],
+                    "img": "high_resource_zones/yinshekou",
+                    "halfW": 144.265,
+                    "halfH": 99.33
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        418.57147,
+                        1209.4285
+                    ],
+                    "img": "high_resource_zones/bingyazhai",
+                    "halfW": 108.575,
+                    "halfH": 75.25
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        497.1429,
+                        859.42847
+                    ],
+                    "img": "high_resource_zones/shatuoling",
+                    "halfW": 113.3587,
+                    "halfH": 87.8275
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        430.00003,
+                        679.4284
+                    ],
+                    "img": "high_resource_zones/yueyinggu",
+                    "halfW": 111.3162,
+                    "halfH": 114.38
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        492.8572,
+                        410.85696
+                    ],
+                    "img": "high_resource_zones/maiheta",
+                    "halfW": 207.4212,
+                    "halfH": 150.7687
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        437.1429,
+                        156.57123
+                    ],
+                    "img": "high_resource_zones/shengyusuo",
+                    "halfW": 114.165,
+                    "halfH": 76.4325
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        732.85724,
+                        187.99982
+                    ],
+                    "img": "high_resource_zones/xieshidouchang",
+                    "halfW": 117.175,
+                    "halfH": 87.075
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        864.9998,
+                        413.0004
+                    ],
+                    "img": "high_resource_zones/kaiweiyaosai",
+                    "halfW": 84.925,
+                    "halfH": 137.6
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        674.28577,
+                        569.4284
+                    ],
+                    "img": "high_resource_zones/jinenfang",
+                    "halfW": 90.3,
+                    "halfH": 126.85
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        807.14294,
+                        1045.1427
+                    ],
+                    "img": "high_resource_zones/huishiqiu",
+                    "halfW": 135.45,
+                    "halfH": 88.0425
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        695.71436,
+                        866.5713
+                    ],
+                    "img": "high_resource_zones/shiquezheng",
+                    "halfW": 102.125,
+                    "halfH": 127.925
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1015.7144,
+                        693.7142
+                    ],
+                    "img": "high_resource_zones/shenhuoguangchang",
+                    "halfW": 94.6,
+                    "halfH": 96.965
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1267.4998,
+                        223.00044
+                    ],
+                    "img": "high_resource_zones/fenghoushilin",
+                    "halfW": 107.5,
+                    "halfH": 66.65
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1494.2859,
+                        319.4284
+                    ],
+                    "img": "high_resource_zones/tangjiabieyuan",
+                    "halfW": 82.775,
+                    "halfH": 145.4475
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1278.5715,
+                        522.2856
+                    ],
+                    "img": "high_resource_zones/zhenyueguan",
+                    "halfW": 75.25,
+                    "halfH": 116.1
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1368.5715,
+                        760.857
+                    ],
+                    "img": "high_resource_zones/chishuigu",
+                    "halfW": 99.6525,
+                    "halfH": 124.8075
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1602.8573,
+                        593.7141
+                    ],
+                    "img": "high_resource_zones/tangancheng",
+                    "halfW": 174.15,
+                    "halfH": 128.6775
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1581.5386,
+                        983.3846
+                    ],
+                    "img": "high_resource_zones/zhanhao",
+                    "halfW": 87.7737,
+                    "halfH": 96.4275
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1764.2859,
+                        1053.7142
+                    ],
+                    "img": "high_resource_zones/xibeidaying",
+                    "halfW": 115.4012,
+                    "halfH": 105.1887
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1238.3673,
+                        1383.5103
+                    ],
+                    "img": "high_resource_zones/guzhanchang",
+                    "halfW": 94.815,
+                    "halfH": 102.7162
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1274.5947,
+                        1222.054
+                    ],
+                    "img": "high_resource_zones/caishichang",
+                    "halfW": 161.25,
+                    "halfH": 72.025
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1531.8921,
+                        1272.8647
+                    ],
+                    "img": "high_resource_zones/xiongzhaopo",
+                    "halfW": 79.12,
+                    "halfH": 103.2
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1851.8921,
+                        1306.3783
+                    ],
+                    "img": "high_resource_zones/dongtutan",
+                    "halfW": 101.05,
+                    "halfH": 127.925
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        267.2,
+                        1440
+                    ],
+                    "img": "high_resource_zones/buhuiya",
+                    "halfW": 164.3675,
+                    "halfH": 165.55
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        661.42865,
+                        1513.7142
+                    ],
+                    "img": "high_resource_zones/kunlunxu",
+                    "halfW": 131.58,
+                    "halfH": 171.14
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1811.4287,
+                        862.2856
+                    ],
+                    "img": "high_resource_zones/ruyiguan",
+                    "halfW": 106.9087,
+                    "halfH": 114.2188
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1059.9999,
+                        298.00012
+                    ],
+                    "img": "high_resource_zones/jinshakezhan",
+                    "halfW": 97.0187,
+                    "halfH": 152.1662
+                }
+            ]
+        },
         "map": "1"
     },
     {
@@ -20457,6 +21145,330 @@
                 }
             ]
         },
+        "highResourceZone": {
+            "MarkerList": [
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1021.42865,
+                        999.42847
+                    ],
+                    "img": "high_resource_zones/jidicheng",
+                    "halfW": 240.8,
+                    "halfH": 235.425
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1305.7145,
+                        1327.9999
+                    ],
+                    "img": "high_resource_zones/yingtianlou",
+                    "halfW": 100.835,
+                    "halfH": 99.33
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1335.7145,
+                        957.9999
+                    ],
+                    "img": "high_resource_zones/cangfengzhong",
+                    "halfW": 94.1378,
+                    "halfH": 100.233
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1276.3638,
+                        615.2726
+                    ],
+                    "img": "high_resource_zones/jinweiying",
+                    "halfW": 124.3775,
+                    "halfH": 94.3312
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1015.484,
+                        517.67725
+                    ],
+                    "img": "high_resource_zones/dianjiangtai",
+                    "halfW": 89.4937,
+                    "halfH": 146.7375
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        692.72736,
+                        1118.909
+                    ],
+                    "img": "high_resource_zones/baopuzhai",
+                    "halfW": 104.49,
+                    "halfH": 106.038
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        494.5455,
+                        1335.2727
+                    ],
+                    "img": "high_resource_zones/tianqingguan",
+                    "halfW": 225.7392,
+                    "halfH": 172.2043
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        349.09094,
+                        1077.0908
+                    ],
+                    "img": "high_resource_zones/yaoyinlin",
+                    "halfW": 95.7825,
+                    "halfH": 125.5815
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        203.63638,
+                        1320.7272
+                    ],
+                    "img": "high_resource_zones/youxinyuan",
+                    "halfW": 138.3525,
+                    "halfH": 119.196
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        290.90912,
+                        1548
+                    ],
+                    "img": "high_resource_zones/guandaotai",
+                    "halfW": 124.3775,
+                    "halfH": 74.7662
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        321.8182,
+                        1729.8181
+                    ],
+                    "img": "high_resource_zones/baiyujing",
+                    "halfW": 149.6722,
+                    "halfH": 106.3282
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        667.27277,
+                        1562.5454
+                    ],
+                    "img": "high_resource_zones/fangxiange",
+                    "halfW": 109.005,
+                    "halfH": 111.8
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        685.4546,
+                        1811.6364
+                    ],
+                    "img": "high_resource_zones/wanfazongtan",
+                    "halfW": 110.4025,
+                    "halfH": 115.2937
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1003.6365,
+                        1471.6364
+                    ],
+                    "img": "high_resource_zones/zifugong",
+                    "halfW": 144.3187,
+                    "halfH": 193.5
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        929.091,
+                        1818.909
+                    ],
+                    "img": "high_resource_zones/chunshuiju",
+                    "halfW": 114.38,
+                    "halfH": 106.855
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1141.8182,
+                        1824.3636
+                    ],
+                    "img": "high_resource_zones/xiyueyuan",
+                    "halfW": 104.49,
+                    "halfH": 95.976
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1416.3638,
+                        1828
+                    ],
+                    "img": "high_resource_zones/youlingqiu",
+                    "halfW": 152.478,
+                    "halfH": 95.202
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1381.8184,
+                        1578.909
+                    ],
+                    "img": "high_resource_zones/dumuku",
+                    "halfW": 109.134,
+                    "halfH": 139.32
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1592.7274,
+                        1629.8181
+                    ],
+                    "img": "high_resource_zones/qingpingfang",
+                    "halfW": 97.825,
+                    "halfH": 116.6912
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1716.3638,
+                        1393.4545
+                    ],
+                    "img": "high_resource_zones/liuhuoting",
+                    "halfW": 90.8375,
+                    "halfH": 96.4275
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1834.5457,
+                        1186.1818
+                    ],
+                    "img": "high_resource_zones/duanshanlou",
+                    "halfW": 98.5238,
+                    "halfH": 118.7875
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1580.0001,
+                        1133.4545
+                    ],
+                    "img": "high_resource_zones/wangshanwu",
+                    "halfW": 170.323,
+                    "halfH": 183.481
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1869.0911,
+                        887.9999
+                    ],
+                    "img": "high_resource_zones/yuanshiling",
+                    "halfW": 90.644,
+                    "halfH": 110.381
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1638.182,
+                        660.7272
+                    ],
+                    "img": "high_resource_zones/chitianyi",
+                    "halfW": 106.9087,
+                    "halfH": 100.62
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1583.6365,
+                        400.72714
+                    ],
+                    "img": "high_resource_zones/tianzhiyuan",
+                    "halfW": 104.8125,
+                    "halfH": 97.1262
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1263.6365,
+                        322.54532
+                    ],
+                    "img": "high_resource_zones/zhuyongfang",
+                    "halfW": 98.5238,
+                    "halfH": 93.6325
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1025.4546,
+                        202.54529
+                    ],
+                    "img": "high_resource_zones/rishengtan",
+                    "halfW": 124.3775,
+                    "halfH": 83.85
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        781.81824,
+                        280.7271
+                    ],
+                    "img": "high_resource_zones/guishilin",
+                    "halfW": 85.9463,
+                    "halfH": 110.4025
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        614.54553,
+                        584.3635
+                    ],
+                    "img": "high_resource_zones/muyunguan",
+                    "halfW": 177.633,
+                    "halfH": 144.007
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        421.8182,
+                        380.72714
+                    ],
+                    "img": "high_resource_zones/wuyaling",
+                    "halfW": 106.21,
+                    "halfH": 93.6325
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        336.36368,
+                        624.3635
+                    ],
+                    "img": "high_resource_zones/wuluodong",
+                    "halfW": 98.642,
+                    "halfH": 107.973
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        614.54553,
+                        931.6363
+                    ],
+                    "img": "high_resource_zones/gusizhai",
+                    "halfW": 103.415,
+                    "halfH": 90.8375
+                }
+            ]
+        },
         "map": "2"
     },
     {
@@ -23182,6 +24194,170 @@
                 }
             ]
         },
+        "highResourceZone": {
+            "MarkerList": [
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        423.78387,
+                        1213.4053
+                    ],
+                    "img": "high_resource_zones/bingyazhai02_white",
+                    "halfW": 108.575,
+                    "halfH": 75.25
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1262.353,
+                        1027.9999
+                    ],
+                    "img": "high_resource_zones/cedian02",
+                    "halfW": 101.05,
+                    "halfH": 150.5
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1360.0001,
+                        762.9998
+                    ],
+                    "img": "high_resource_zones/chishuigu02",
+                    "halfW": 110.725,
+                    "halfH": 138.675
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        801.8182,
+                        1051.6364
+                    ],
+                    "img": "high_resource_zones/huishiqiu02",
+                    "halfW": 150.5,
+                    "halfH": 97.825
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        615.13525,
+                        1203.6755
+                    ],
+                    "img": "high_resource_zones/miwusenlin02_white",
+                    "halfW": 86.1075,
+                    "halfH": 128.6775
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1013.95355,
+                        693.5813
+                    ],
+                    "img": "high_resource_zones/shenhuoguangchang02",
+                    "halfW": 86.0,
+                    "halfH": 88.15
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        696.47064,
+                        855.0588
+                    ],
+                    "img": "high_resource_zones/shiquezheng02",
+                    "halfW": 102.125,
+                    "halfH": 127.925
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1754.8389,
+                        1053.1611
+                    ],
+                    "img": "high_resource_zones/xibeidaying02_white",
+                    "halfW": 109.3275,
+                    "halfH": 99.6525
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        906.0466,
+                        1644.279
+                    ],
+                    "img": "high_resource_zones/xueliancun02_white",
+                    "halfW": 99.975,
+                    "halfH": 74.175
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        739.4595,
+                        1313.9459
+                    ],
+                    "img": "high_resource_zones/yinshekou02_white",
+                    "halfW": 118.035,
+                    "halfH": 81.27
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1580.8002,
+                        974.3999
+                    ],
+                    "img": "high_resource_zones/zhanhao02_white",
+                    "halfW": 76.325,
+                    "halfH": 83.85
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1272.258,
+                        517.67737
+                    ],
+                    "img": "high_resource_zones/zhenyueguan02_white",
+                    "halfW": 75.25,
+                    "halfH": 116.1
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        593.4999,
+                        1585
+                    ],
+                    "img": "high_resource_zones/kunlunxu02",
+                    "halfW": 148.0275,
+                    "halfH": 192.5325
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1051.613,
+                        1010.5805
+                    ],
+                    "img": "high_resource_zones/shenyingbao02",
+                    "halfW": 172.215,
+                    "halfH": 236.07
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1666.353,
+                        532.2351
+                    ],
+                    "img": "high_resource_zones/tangancheng02",
+                    "halfW": 174.15,
+                    "halfH": 128.6775
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1647.143,
+                        770.8571
+                    ],
+                    "img": "high_resource_zones/junying02_white",
+                    "halfW": 131.15,
+                    "halfH": 76.325
+                }
+            ]
+        },
         "map": "3"
     },
     {
@@ -23650,6 +24826,38 @@
                         1259.3
                     ],
                     "img": "4/riftChestEpic/adc24a0d941be9c50d5a887059965c10"
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        795.4,
+                        607.1
+                    ],
+                    "img": "4/riftChestEpic/69405e38568845e9c8ec8e061441f40f"
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        833.6,
+                        512.4
+                    ],
+                    "img": "4/riftChestEpic/097434b0a937fe8d088f07ec04c5924e"
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1311.4,
+                        535.6
+                    ],
+                    "img": "4/riftChestEpic/20ace7be7231c0e1eb9fb43cd8acd345"
+                },
+                {
+                    "type": "riftChestEpic",
+                    "pos": [
+                        1107.1,
+                        1600.6
+                    ],
+                    "img": "4/riftChestEpic/7c25848a481650511c9a3288a7538200"
                 }
             ]
         },
@@ -24900,6 +26108,14 @@
                         1212.3
                     ],
                     "img": "4/riftSmallMakeupBox/6950dee8507fc2acfa1768b76c4a9518"
+                },
+                {
+                    "type": "riftSmallMakeupBox",
+                    "pos": [
+                        1075.1,
+                        1292.6
+                    ],
+                    "img": "4/riftSmallMakeupBox/7216a69b2fa4a4bb5ed8184913f6466e"
                 }
             ]
         },
@@ -25130,6 +26346,320 @@
         "map": "4"
     },
     {
+        "highResourceZone": {
+            "MarkerList": [
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1022.4001,
+                        999.9999
+                    ],
+                    "img": "high_resource_zones/shuangyaocheng",
+                    "halfW": 247.68,
+                    "halfH": 247.68
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        757.5509,
+                        1524.7347
+                    ],
+                    "img": "high_resource_zones/julinggu",
+                    "halfW": 247.68,
+                    "halfH": 247.68
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        548.5714,
+                        659.4285
+                    ],
+                    "img": "high_resource_zones/wenxianxu",
+                    "halfW": 247.68,
+                    "halfH": 247.68
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1588,
+                        1336
+                    ],
+                    "img": "high_resource_zones/canglangwu",
+                    "halfW": 247.68,
+                    "halfH": 247.68
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1492.7274,
+                        500.72714
+                    ],
+                    "img": "high_resource_zones/lizhuyuan",
+                    "halfW": 247.68,
+                    "halfH": 247.68
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        763.87103,
+                        909.93536
+                    ],
+                    "img": "high_resource_zones/cangyanxuegong",
+                    "halfW": 247.68,
+                    "halfH": 247.68
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1057.6744,
+                        654.51154
+                    ],
+                    "img": "high_resource_zones/chaoxicaijuesuo",
+                    "halfW": 247.68,
+                    "halfH": 247.68
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1307.0001,
+                        743.99994
+                    ],
+                    "img": "high_resource_zones/zhenhaitai",
+                    "halfW": 242.176,
+                    "halfH": 242.176
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1349.714,
+                        945.71454
+                    ],
+                    "img": "high_resource_zones/baichuanku",
+                    "halfW": 242.176,
+                    "halfH": 242.176
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1303.6364,
+                        1213.4546
+                    ],
+                    "img": "high_resource_zones/yinghuizha",
+                    "halfW": 242.176,
+                    "halfH": 242.176
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        354.90903,
+                        1556.3638
+                    ],
+                    "img": "high_resource_zones/shougujiao",
+                    "halfW": 242.176,
+                    "halfH": 242.176
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        207.00002,
+                        1230
+                    ],
+                    "img": "high_resource_zones/zhuiwuhaiya",
+                    "halfW": 242.176,
+                    "halfH": 242.176
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        437.09082,
+                        1323.6365
+                    ],
+                    "img": "high_resource_zones/shoushanjian",
+                    "halfW": 220.16,
+                    "halfH": 220.16
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        582.0408,
+                        1736.1633
+                    ],
+                    "img": "high_resource_zones/yanshitan",
+                    "halfW": 247.68,
+                    "halfH": 247.68
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1122.1621,
+                        1371.2433
+                    ],
+                    "img": "high_resource_zones/zulingshilin",
+                    "halfW": 242.176,
+                    "halfH": 242.176
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        989.67755,
+                        1672.5161
+                    ],
+                    "img": "high_resource_zones/xianminditai",
+                    "halfW": 242.176,
+                    "halfH": 242.176
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        387.05887,
+                        907.9999
+                    ],
+                    "img": "high_resource_zones/xianchili",
+                    "halfW": 242.176,
+                    "halfH": 242.176
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        258.57144,
+                        682.2856
+                    ],
+                    "img": "high_resource_zones/fuchawan",
+                    "halfW": 242.176,
+                    "halfH": 242.176
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        840.00006,
+                        489.4284
+                    ],
+                    "img": "high_resource_zones/qizuigu",
+                    "halfW": 247.68,
+                    "halfH": 247.68
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        612.8572,
+                        417.99985
+                    ],
+                    "img": "high_resource_zones/lianqiju",
+                    "halfW": 247.68,
+                    "halfH": 247.68
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        548.3871,
+                        974.4516
+                    ],
+                    "img": "high_resource_zones/mishishaosuo",
+                    "halfW": 233.92,
+                    "halfH": 233.92
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        274.00003,
+                        357.9999
+                    ],
+                    "img": "high_resource_zones/dengxiandukou",
+                    "halfW": 233.92,
+                    "halfH": 233.92
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1841.0812,
+                        1088
+                    ],
+                    "img": "high_resource_zones/chaoximuyuan",
+                    "halfW": 233.92,
+                    "halfH": 233.92
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1552.4325,
+                        1072.8649
+                    ],
+                    "img": "high_resource_zones/mufengfang",
+                    "halfW": 242.176,
+                    "halfH": 242.176
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1807.5676,
+                        1351.7837
+                    ],
+                    "img": "high_resource_zones/yelulitang",
+                    "halfW": 242.176,
+                    "halfH": 242.176
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1514.5947,
+                        1681.5135
+                    ],
+                    "img": "high_resource_zones/luozhouwu",
+                    "halfW": 242.176,
+                    "halfH": 242.176
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1242.1622,
+                        1670.7026
+                    ],
+                    "img": "high_resource_zones/haiwangjiao",
+                    "halfW": 242.176,
+                    "halfH": 242.176
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1003.8711,
+                        303.48367
+                    ],
+                    "img": "high_resource_zones/chenlinyu",
+                    "halfW": 247.68,
+                    "halfH": 247.68
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1207.7421,
+                        374.45145
+                    ],
+                    "img": "high_resource_zones/zibeiyuan",
+                    "halfW": 247.68,
+                    "halfH": 247.68
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1776.3638,
+                        820.7272
+                    ],
+                    "img": "high_resource_zones/quankeju",
+                    "halfW": 247.68,
+                    "halfH": 247.68
+                },
+                {
+                    "type": "highResourceZone",
+                    "pos": [
+                        1567.2728,
+                        780.7272
+                    ],
+                    "img": "high_resource_zones/langganzhu",
+                    "halfW": 247.68,
+                    "halfH": 247.68
+                }
+            ]
+        },
         "map": "5",
         "helanArt": {
             "MarkerList": [

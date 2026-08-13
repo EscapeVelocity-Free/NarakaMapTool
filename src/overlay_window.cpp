@@ -129,7 +129,7 @@ std::string GetMappingFileName(std::string type) {
         {"angelfish", "angelfish"}, {"azureFinchFish", "azure_finch_fish"},
         {"azureWaveCoralline", "azure_wave_coralline"}, {"goldenFlameCoralline", "golden_flame_coralline"},
         {"grandLizard", "grand_lizard"}, {"stingtailFish", "stingtail_fish"},
-        {"violetCoralline", "violet_coralline"}
+        {"violetCoralline", "violet_coralline"}, {"highResourceZone", "high_resource_zone"}
     };
     if (nameMap.count(type)) return nameMap[type];
     return type;
@@ -158,9 +158,11 @@ OverlayWindow::OverlayWindow() : m_hwnd(NULL), m_bgImg(NULL), m_currentMapId("2"
 }
 
 OverlayWindow::~OverlayWindow() {
-    Logger::info("Destroying overlay window: cached_icons={} active_points={}", m_iconCache.size(), m_points.size());
+    Logger::info("Destroying overlay window: cached_icons={} cached_zones={} active_points={} active_zones={}",
+        m_iconCache.size(), m_zoneImageCache.size(), m_points.size(), m_zones.size());
     if (m_bgImg) delete m_bgImg;
     for (auto& pair : m_iconCache) delete pair.second;
+    for (auto& pair : m_zoneImageCache) delete pair.second;
     GdiplusShutdown(m_gdiToken);
 }
 
@@ -301,8 +303,10 @@ void OverlayWindow::loadData() {
     try {
         nlohmann::json data; f >> data;
         m_points.clear();
+        m_zones.clear();
         size_t matchingMapEntries = 0;
         size_t selectedTypeEntries = 0;
+        size_t zoneCount = 0;
         for (auto& item : data) {
             if (item.value("map", "") == m_currentMapId) {
                 ++matchingMapEntries;
@@ -330,7 +334,27 @@ void OverlayWindow::loadData() {
                                 oss << m_currentMapId << ':' << key << ':' << markerIndex << ':' << gx << ',' << gy;
                                 id = oss.str();
                             }
-                            m_points.push_back({ id, key, ax, ay });
+
+                            // 高资源区域：按矩形区域记录，图片拉伸绘制（网站同款）
+                            if (key == "highResourceZone") {
+                                const double halfW = marker.value("halfW", 0.0);
+                                const double halfH = marker.value("halfH", 0.0);
+                                const int absHalfW = (int)((halfW / 2048.0) * m_winSize);
+                                const int absHalfH = (int)((halfH / 2048.0) * m_winSize);
+                                m_zones.push_back({ id, key, ax, ay, absHalfW, absHalfH });
+                                ++zoneCount;
+                            }
+                            else {
+                                // 网站同款范围圆：bell(侦察钟) 半径100，forbiddenSeal(奥义封印) 半径50（2048 坐标系）
+                                int radius = 0;
+                                if (key == "bell") {
+                                    radius = (int)((100.0 / 2048.0) * m_winSize);
+                                }
+                                else if (key == "forbiddenSeal") {
+                                    radius = (int)((50.0 / 2048.0) * m_winSize);
+                                }
+                                m_points.push_back({ id, key, ax, ay, radius });
+                            }
                             ++markerIndex;
                         }
                     }
@@ -347,9 +371,9 @@ void OverlayWindow::loadData() {
             m_routeStartId.clear();
         }
         rebuildRoute();
-        Logger::info("Resource data loaded: map_id={} layer={} map_entries={} matched_resource_types={} active_points={} excluded_points={} route_points={}",
+        Logger::info("Resource data loaded: map_id={} layer={} map_entries={} matched_resource_types={} active_points={} active_zones={} excluded_points={} route_points={}",
             m_currentMapId, m_currentLayer, matchingMapEntries, selectedTypeEntries, m_points.size(),
-            m_excludedPointIds.size(), m_routeOrder.size());
+            m_zones.size(), m_excludedPointIds.size(), m_routeOrder.size());
     }
     catch (...) {
         Logger::error("loadData error");
@@ -642,6 +666,41 @@ Gdiplus::Image* OverlayWindow::GetIcon(std::string type) {
     }
 }
 
+Gdiplus::Image* OverlayWindow::GetZoneImage(const std::string& zoneId) {
+    // 1. 缓存检查
+    if (m_zoneImageCache.count(zoneId)) {
+        return m_zoneImageCache[zoneId];
+    }
+
+    try {
+        // 2. 区域图片路径: resources/high_resource_zones/{zoneId}.png
+        //    zoneId 形如 "high_resource_zones/bailiandong"，取最后一段作为文件名
+        std::string fileName = zoneId;
+        const size_t slashPos = zoneId.find_last_of('/');
+        if (slashPos != std::string::npos) {
+            fileName = zoneId.substr(slashPos + 1);
+        }
+
+        namespace fs = std::filesystem;
+        fs::path zonePath = fs::u8path(ConfigManager::resourcePath) / "high_resource_zones" / (fileName + ".png");
+
+        Gdiplus::Image* img = new Gdiplus::Image(zonePath.wstring().c_str());
+        if (img->GetLastStatus() != Gdiplus::Ok) {
+            Logger::warn("Failed to load zone image: {} Status: {}", zonePath.string(), (int)img->GetLastStatus());
+            delete img;
+            m_zoneImageCache[zoneId] = nullptr;
+            return nullptr;
+        }
+
+        m_zoneImageCache[zoneId] = img;
+        return img;
+    }
+    catch (const std::exception& e) {
+        Logger::error("Error in GetZoneImage for {}: {}", zoneId, e.what());
+        return nullptr;
+    }
+}
+
 void OverlayWindow::paint(HDC hdc) {
     // 传统的双缓冲逻辑
     HDC memDC = CreateCompatibleDC(hdc);
@@ -659,6 +718,46 @@ void OverlayWindow::paint(HDC hdc) {
     // 2. 根据开关决定是否绘制地图
     if (m_showBackground && m_bgImg && m_bgImg->GetLastStatus() == Ok) {
         g.DrawImage(m_bgImg, 0, 0, m_winSize, m_winSize);
+    }
+
+    // 2.5 绘制高资源区域（网站同款：区域图片拉伸到包围盒，位于背景与路线之间）
+    for (const auto& zone : m_zones) {
+        Image* zoneImg = GetZoneImage(zone.id);
+        const int left = zone.absX - m_winX - zone.absHalfW;
+        const int top = zone.absY - m_winY - zone.absHalfH;
+        if (zoneImg) {
+            g.DrawImage(zoneImg, left, top, zone.absHalfW * 2, zone.absHalfH * 2);
+        }
+        else {
+            // 图片缺失时的兜底：半透明矩形区域
+            SolidBrush fallbackBrush(Color(48, 255, 196, 0));
+            g.FillRectangle(&fallbackBrush, left, top, zone.absHalfW * 2, zone.absHalfH * 2);
+        }
+    }
+
+    // 2.6 绘制范围圆（网站同款：bell 侦察钟 半径100、forbiddenSeal 奥义封印 半径50，位于路线/图标之下）
+    for (const auto& pt : m_points) {
+        if (pt.radius <= 0) {
+            continue;
+        }
+        const int localX = pt.absX - m_winX;
+        const int localY = pt.absY - m_winY;
+        const int d = pt.radius * 2;
+
+        if (pt.type == "bell") {
+            // 网站参数: color=#996600 fillColor=#cf8900 fillOpacity=0.3 opacity=0.8 weight=2
+            SolidBrush bellFill(Color(61, 207, 137, 0));
+            g.FillEllipse(&bellFill, localX - pt.radius, localY - pt.radius, d, d);
+            Pen bellPen(Color(204, 153, 102, 0), 2.0f);
+            g.DrawEllipse(&bellPen, localX - pt.radius, localY - pt.radius, d, d);
+        }
+        else if (pt.type == "forbiddenSeal") {
+            // 网站参数: color=#0909aa fillColor=#0003aa fillOpacity=0.225 opacity=0.8 weight=2
+            SolidBrush sealFill(Color(46, 0, 3, 170));
+            g.FillEllipse(&sealFill, localX - pt.radius, localY - pt.radius, d, d);
+            Pen sealPen(Color(204, 9, 9, 170), 2.0f);
+            g.DrawEllipse(&sealPen, localX - pt.radius, localY - pt.radius, d, d);
+        }
     }
 
     drawRoute(g);
