@@ -13,6 +13,7 @@
 #include "logger.h"
 
 #pragma comment(lib, "Shlwapi.lib")
+#pragma comment(lib, "Msimg32.lib")
 using namespace Gdiplus;
 namespace fs = std::filesystem;
 
@@ -160,6 +161,7 @@ OverlayWindow::OverlayWindow() : m_hwnd(NULL), m_bgImg(NULL), m_currentMapId("2"
 OverlayWindow::~OverlayWindow() {
     Logger::info("Destroying overlay window: cached_icons={} cached_zones={} active_points={} active_zones={}",
         m_iconCache.size(), m_zoneImageCache.size(), m_points.size(), m_zones.size());
+    releaseRenderSurface();
     if (m_bgImg) delete m_bgImg;
     for (auto& pair : m_iconCache) delete pair.second;
     for (auto& pair : m_zoneImageCache) delete pair.second;
@@ -175,6 +177,7 @@ void OverlayWindow::setMap(const std::string& mapId, const std::string& mapName)
     m_routeStartId.clear();
     m_excludedPointIds.clear();
     m_routeOrder.clear();
+    m_mapTransform.reset(m_winX, m_winY, m_winSize);
 
     loadMapBackground();
     loadData();
@@ -197,12 +200,14 @@ void OverlayWindow::setMapLayer(int layer) {
     Logger::info("Overlay map layer switch requested: map_id={} previous_layer={} target_layer={}",
         m_currentMapId, m_currentLayer, layer);
     m_currentLayer = layer;
+    m_mapTransform.reset(m_winX, m_winY, m_winSize);
     loadMapBackground();
     loadData();
     invalidate();
 }
 
 void OverlayWindow::loadMapBackground() {
+    m_backgroundFrameDirty = true;
     if (m_bgImg) {
         delete m_bgImg;
         m_bgImg = nullptr;
@@ -247,6 +252,8 @@ void OverlayWindow::init(HINSTANCE hInst) {
     m_winX = ConfigManager::mapOffsetX;
     m_winY = ConfigManager::mapOffsetY;
     m_winSize = ConfigManager::mapUiSize;
+    m_mapTransform.reset(m_winX, m_winY, m_winSize);
+    m_backgroundFrameDirty = true;
     Logger::info("Initializing overlay window: origin=({}, {}) size={} instance={}",
         m_winX, m_winY, m_winSize, static_cast<const void*>(hInst));
 
@@ -325,9 +332,9 @@ void OverlayWindow::loadData() {
                             if (pos[1].is_string()) gy = std::stod(pos[1].get<std::string>());
                             else gy = pos[1].get<double>();
 
-                            // 存储绝对坐标
-                            int ax = (int)((gx / 2048.0) * m_winSize) + m_winX;
-                            int ay = (int)(((2048.0 - gy) / 2048.0) * m_winSize) + m_winY;
+                            // 存储 2048 地图坐标，屏幕坐标由 MapTransform 在绘制和命中检测时实时计算。
+                            const double mapX = gx;
+                            const double mapY = 2048.0 - gy;
                             std::string id = marker.value("img", "");
                             if (id.empty()) {
                                 std::ostringstream oss;
@@ -339,21 +346,19 @@ void OverlayWindow::loadData() {
                             if (key == "highResourceZone") {
                                 const double halfW = marker.value("halfW", 0.0);
                                 const double halfH = marker.value("halfH", 0.0);
-                                const int absHalfW = (int)((halfW / 2048.0) * m_winSize);
-                                const int absHalfH = (int)((halfH / 2048.0) * m_winSize);
-                                m_zones.push_back({ id, key, ax, ay, absHalfW, absHalfH });
+                                m_zones.push_back({ id, key, mapX, mapY, halfW, halfH });
                                 ++zoneCount;
                             }
                             else {
                                 // 网站同款范围圆：bell(侦察钟) 半径100，forbiddenSeal(奥义封印) 半径50（2048 坐标系）
-                                int radius = 0;
+                                double radiusMap = 0.0;
                                 if (key == "bell") {
-                                    radius = (int)((100.0 / 2048.0) * m_winSize);
+                                    radiusMap = 100.0;
                                 }
                                 else if (key == "forbiddenSeal") {
-                                    radius = (int)((50.0 / 2048.0) * m_winSize);
+                                    radiusMap = 50.0;
                                 }
-                                m_points.push_back({ id, key, ax, ay, radius });
+                                m_points.push_back({ id, key, mapX, mapY, radiusMap });
                             }
                             ++markerIndex;
                         }
@@ -416,28 +421,42 @@ void OverlayWindow::handleAltAction() {
 
         double min_dist = 99999.0;
         Point* target = nullptr;
+        MapScreenPoint targetScreen;
 
         // 2. 寻找最近的资源点
         for (auto& pt : m_points) {
-            double d = std::sqrt(std::pow(pt.absX - cur.x, 2) + std::pow(pt.absY - cur.y, 2));
+            const MapScreenPoint screenPoint = pointToScreen(pt);
+            const double dx = screenPoint.x - cur.x;
+            const double dy = screenPoint.y - cur.y;
+            double d = std::sqrt(dx * dx + dy * dy);
             if (d < min_dist) {
                 min_dist = d;
                 target = &pt;
+                targetScreen = screenPoint;
             }
         }
 
         // 3. 执行：自动寻路资源 (阈值 100 像素)
         if (target && min_dist < 100.0) {
-            Logger::info("Starting auto-navigation: id={} type={} target=({}, {}) distance={:.2f}",
-                target->id, target->type, target->absX, target->absY, min_dist);
+            const int targetX = static_cast<int>(std::lround(targetScreen.x));
+            const int targetY = static_cast<int>(std::lround(targetScreen.y));
+            const int zoomSteps = m_mapTransform.stepsToMaxZoom();
+            Logger::info("Starting auto-navigation: id={} type={} target=({}, {}) distance={:.2f} zoom_step={} zoom_steps={}",
+                target->id, target->type, targetX, targetY, min_dist,
+                m_mapTransform.zoomStep(), zoomSteps);
 
-            // Step 1: 模拟滚轮向上滚动 50 次 (times=50)
-            SetCursorPos(target->absX, target->absY);
-            Logger::debug("Auto-navigation step 1: scrolling at target position, repeats=50.");
-            Win32_MouseScroll(true, 1, 50);
+            // Step 1: 模拟滚轮向上滚动到游戏地图最大缩放（当前游戏上限为 32 次）
+            SetCursorPos(targetX, targetY);
+            Logger::debug("Auto-navigation step 1: scrolling at target position, repeats={}", zoomSteps);
+            Win32_MouseScroll(true, 1, zoomSteps);
+            if (zoomSteps > 0) {
+                m_mapTransform.applyWheelSteps(zoomSteps, targetX, targetY);
+                m_backgroundFrameDirty = true;
+                invalidate();
+            }
 
             // Step 2: 在目标点双击
-            Win32_MouseClick(target->absX, target->absY);
+            Win32_MouseClick(targetX, targetY);
             Logger::debug("Auto-navigation step 2: clicked target marker.");
 
             // Step 3: 等待 100ms
@@ -466,6 +485,31 @@ void OverlayWindow::handleAltAction() {
     else {
         Logger::warn("Auto-navigation skipped: cursor is outside the overlay bounds.");
     }
+}
+
+void OverlayWindow::handleMouseWheel(int wheelDelta, int screenX, int screenY, bool injected) {
+    if (!m_mapZoomEnabled || injected || !isVisible() ||
+        !m_mapTransform.isScreenPointInsideViewport(screenX, screenY)) {
+        return;
+    }
+
+    m_wheelRemainder += wheelDelta;
+    int wheelSteps = 0;
+    while (m_wheelRemainder >= 120) {
+        ++wheelSteps;
+        m_wheelRemainder -= 120;
+    }
+    while (m_wheelRemainder <= -120) {
+        --wheelSteps;
+        m_wheelRemainder += 120;
+    }
+
+    if (wheelSteps == 0 || !m_mapTransform.applyWheelSteps(wheelSteps, screenX, screenY)) {
+        return;
+    }
+
+    m_backgroundFrameDirty = true;
+    invalidate();
 }
 
 void OverlayWindow::toggleRouteVisible() {
@@ -539,8 +583,9 @@ int OverlayWindow::findNearestPointToCursor(double maxDistance) const {
     int bestIndex = -1;
     for (size_t i = 0; i < m_points.size(); ++i) {
         const auto& point = m_points[i];
-        double dx = static_cast<double>(point.absX - cur.x);
-        double dy = static_cast<double>(point.absY - cur.y);
+        const MapScreenPoint screenPoint = pointToScreen(point);
+        double dx = screenPoint.x - cur.x;
+        double dy = screenPoint.y - cur.y;
         double distSq = dx * dx + dy * dy;
         if (distSq < bestDistSq) {
             bestDistSq = distSq;
@@ -551,6 +596,10 @@ int OverlayWindow::findNearestPointToCursor(double maxDistance) const {
     return bestIndex;
 }
 
+MapScreenPoint OverlayWindow::pointToScreen(const Point& point) const {
+    return m_mapTransform.mapToScreen(point.mapX, point.mapY);
+}
+
 void OverlayWindow::rebuildRoute() {
     m_routeOrder.clear();
     if (!m_showRoute || m_points.size() < 2) return;
@@ -558,7 +607,10 @@ void OverlayWindow::rebuildRoute() {
     std::vector<ScreenCoord> coords;
     coords.reserve(m_points.size());
     for (const auto& point : m_points) {
-        coords.emplace_back(point.absX, point.absY);
+        const MapScreenPoint screenPoint = pointToScreen(point);
+        coords.emplace_back(
+            static_cast<int>(std::lround(screenPoint.x)),
+            static_cast<int>(std::lround(screenPoint.y)));
     }
 
     std::vector<size_t> candidates;
@@ -593,9 +645,10 @@ void OverlayWindow::drawRoute(Graphics& g) {
     for (size_t index : m_routeOrder) {
         if (index >= m_points.size()) continue;
         const auto& point = m_points[index];
+        const MapScreenPoint screenPoint = pointToScreen(point);
         points.emplace_back(
-            static_cast<REAL>(point.absX - m_winX),
-            static_cast<REAL>(point.absY - m_winY)
+            static_cast<REAL>(screenPoint.x - m_winX),
+            static_cast<REAL>(screenPoint.y - m_winY)
         );
     }
     if (points.size() < 2) return;
@@ -701,13 +754,19 @@ Gdiplus::Image* OverlayWindow::GetZoneImage(const std::string& zoneId) {
     }
 }
 
-void OverlayWindow::paint(HDC hdc) {
-    // 使用 32 位 ARGB DIB，避免颜色键透明破坏半透明 PNG、范围图层和抗锯齿边缘。
-    (void)hdc;
-    HDC memDC = CreateCompatibleDC(nullptr);
-    if (!memDC) {
-        Logger::error("Failed to create layered window memory DC.");
-        return;
+bool OverlayWindow::ensureRenderSurface() {
+    if (m_renderDC && m_renderBitmap && m_backgroundDC && m_backgroundBitmap &&
+        m_overlayDC && m_overlayBitmap) {
+        return true;
+    }
+
+    m_renderDC = CreateCompatibleDC(nullptr);
+    m_backgroundDC = CreateCompatibleDC(nullptr);
+    m_overlayDC = CreateCompatibleDC(nullptr);
+    if (!m_renderDC || !m_backgroundDC || !m_overlayDC) {
+        Logger::error("Failed to create layered window memory DCs.");
+        releaseRenderSurface();
+        return false;
     }
 
     BITMAPINFO bitmapInfo{};
@@ -718,89 +777,249 @@ void OverlayWindow::paint(HDC hdc) {
     bitmapInfo.bmiHeader.biBitCount = 32;
     bitmapInfo.bmiHeader.biCompression = BI_RGB;
 
-    void* bitmapBits = nullptr;
-    HBITMAP memBitmap = CreateDIBSection(
-        memDC, &bitmapInfo, DIB_RGB_COLORS, &bitmapBits, nullptr, 0);
-    if (!memBitmap) {
-        Logger::error("Failed to create 32-bit ARGB DIB for layered window.");
-        DeleteDC(memDC);
+    m_renderBitmap = CreateDIBSection(
+        m_renderDC, &bitmapInfo, DIB_RGB_COLORS, &m_renderBits, nullptr, 0);
+    m_backgroundBitmap = CreateDIBSection(
+        m_backgroundDC, &bitmapInfo, DIB_RGB_COLORS, &m_backgroundBits, nullptr, 0);
+    m_overlayBitmap = CreateDIBSection(
+        m_overlayDC, &bitmapInfo, DIB_RGB_COLORS, &m_overlayBits, nullptr, 0);
+    if (!m_renderBitmap || !m_backgroundBitmap || !m_overlayBitmap) {
+        Logger::error("Failed to create 32-bit ARGB DIB layers for layered window.");
+        releaseRenderSurface();
+        return false;
+    }
+
+    m_renderPreviousBitmap = SelectObject(m_renderDC, m_renderBitmap);
+    m_backgroundPreviousBitmap = SelectObject(m_backgroundDC, m_backgroundBitmap);
+    m_overlayPreviousBitmap = SelectObject(m_overlayDC, m_overlayBitmap);
+    m_backgroundFrameDirty = true;
+    m_overlayFrameDirty = true;
+    return true;
+}
+
+void OverlayWindow::releaseRenderSurface() {
+    if (m_renderDC && m_renderPreviousBitmap) {
+        SelectObject(m_renderDC, m_renderPreviousBitmap);
+    }
+    if (m_backgroundDC && m_backgroundPreviousBitmap) {
+        SelectObject(m_backgroundDC, m_backgroundPreviousBitmap);
+    }
+    if (m_overlayDC && m_overlayPreviousBitmap) {
+        SelectObject(m_overlayDC, m_overlayPreviousBitmap);
+    }
+    if (m_renderBitmap) {
+        DeleteObject(m_renderBitmap);
+    }
+    if (m_backgroundBitmap) {
+        DeleteObject(m_backgroundBitmap);
+    }
+    if (m_overlayBitmap) {
+        DeleteObject(m_overlayBitmap);
+    }
+    if (m_renderDC) {
+        DeleteDC(m_renderDC);
+    }
+    if (m_backgroundDC) {
+        DeleteDC(m_backgroundDC);
+    }
+    if (m_overlayDC) {
+        DeleteDC(m_overlayDC);
+    }
+    m_renderDC = nullptr;
+    m_renderBitmap = nullptr;
+    m_renderPreviousBitmap = nullptr;
+    m_renderBits = nullptr;
+    m_backgroundDC = nullptr;
+    m_backgroundBitmap = nullptr;
+    m_backgroundPreviousBitmap = nullptr;
+    m_backgroundBits = nullptr;
+    m_overlayDC = nullptr;
+    m_overlayBitmap = nullptr;
+    m_overlayPreviousBitmap = nullptr;
+    m_overlayBits = nullptr;
+}
+
+bool OverlayWindow::renderBackgroundFrame() {
+    if (!m_backgroundDC || !m_backgroundBitmap || !m_backgroundFrameDirty) {
+        return m_backgroundDC && m_backgroundBitmap;
+    }
+
+    Graphics g(m_backgroundDC);
+    // Keep the cached layer transparent outside the map so AlphaBlend can composite it directly.
+    g.SetInterpolationMode(InterpolationModeHighQualityBilinear);
+    g.SetSmoothingMode(SmoothingModeAntiAlias);
+    g.Clear(Color(0, 0, 0, 0));
+
+    if (m_showBackground && m_bgImg && m_bgImg->GetLastStatus() == Ok) {
+        // 只从原图采样当前视口，避免最大缩放时先生成 5000+ 像素的大图再裁剪。
+        // 这条路径与游戏地图的纹理裁剪方式一致，也显著降低滚轮缩放的 CPU 开销。
+        const double mapScale = m_mapTransform.mapLengthToScreen(1.0);
+        const MapScreenPoint mapOrigin = m_mapTransform.mapToScreen(0.0, 0.0);
+        if (mapScale > 0.0) {
+            const double sourceLeft = (m_winX - mapOrigin.x) / mapScale;
+            const double sourceTop = (m_winY - mapOrigin.y) / mapScale;
+            const double sourceRight = (m_winX + m_winSize - mapOrigin.x) / mapScale;
+            const double sourceBottom = (m_winY + m_winSize - mapOrigin.y) / mapScale;
+
+            const double clippedLeft = (std::max)(0.0, (std::min)(
+                MapTransform::kMapCoordinateSize, sourceLeft));
+            const double clippedTop = (std::max)(0.0, (std::min)(
+                MapTransform::kMapCoordinateSize, sourceTop));
+            const double clippedRight = (std::max)(0.0, (std::min)(
+                MapTransform::kMapCoordinateSize, sourceRight));
+            const double clippedBottom = (std::max)(0.0, (std::min)(
+                MapTransform::kMapCoordinateSize, sourceBottom));
+
+            if (clippedRight > clippedLeft && clippedBottom > clippedTop) {
+                const RectF destination(
+                    static_cast<REAL>(mapOrigin.x + clippedLeft * mapScale - m_winX),
+                    static_cast<REAL>(mapOrigin.y + clippedTop * mapScale - m_winY),
+                    static_cast<REAL>((clippedRight - clippedLeft) * mapScale),
+                    static_cast<REAL>((clippedBottom - clippedTop) * mapScale));
+                g.DrawImage(
+                    m_bgImg,
+                    destination,
+                    static_cast<REAL>(clippedLeft),
+                    static_cast<REAL>(clippedTop),
+                    static_cast<REAL>(clippedRight - clippedLeft),
+                    static_cast<REAL>(clippedBottom - clippedTop),
+                    UnitPixel);
+            }
+        }
+    }
+
+    m_backgroundFrameDirty = false;
+    return true;
+}
+
+void OverlayWindow::paint(HDC hdc) {
+    // 使用 32 位 ARGB DIB，避免颜色键透明破坏半透明 PNG、范围图层和抗锯齿边缘。
+    (void)hdc;
+    m_framePending = false;
+    if (!ensureRenderSurface()) {
         return;
     }
 
-    HGDIOBJ oldBitmap = SelectObject(memDC, memBitmap);
+    HDC memDC = m_renderDC;
 
     {
         Graphics g(memDC);
-        g.SetInterpolationMode(InterpolationModeHighQualityBicubic);
+        // Bilinear filtering keeps wheel-driven redraws responsive while preserving smooth map edges.
+        g.SetInterpolationMode(InterpolationModeHighQualityBilinear);
         g.SetSmoothingMode(SmoothingModeAntiAlias);
         g.Clear(Color(0, 0, 0, 0));
+    }
 
         // 1. 根据开关决定是否绘制地图
         if (m_showBackground && m_bgImg && m_bgImg->GetLastStatus() == Ok) {
-            g.DrawImage(m_bgImg, 0, 0, m_winSize, m_winSize);
-        }
-
-        // 2.5 绘制高资源区域（网站同款：区域图片拉伸到包围盒，位于背景与路线之间）
-        for (const auto& zone : m_zones) {
-            Image* zoneImg = GetZoneImage(zone.id);
-            const int left = zone.absX - m_winX - zone.absHalfW;
-            const int top = zone.absY - m_winY - zone.absHalfH;
-            if (zoneImg) {
-                g.DrawImage(zoneImg, left, top, zone.absHalfW * 2, zone.absHalfH * 2);
-            }
-            else {
-                // 图片缺失时的兜底：半透明矩形区域
-                SolidBrush fallbackBrush(Color(48, 255, 196, 0));
-                g.FillRectangle(&fallbackBrush, left, top, zone.absHalfW * 2, zone.absHalfH * 2);
+            if (renderBackgroundFrame() && m_backgroundOpacity > 0) {
+                if (m_backgroundOpacity >= 100) {
+                    BitBlt(memDC, 0, 0, m_winSize, m_winSize,
+                        m_backgroundDC, 0, 0, SRCCOPY);
+                }
+                else {
+                    BLENDFUNCTION backgroundBlend{
+                        AC_SRC_OVER, 0, static_cast<BYTE>(m_backgroundOpacity), AC_SRC_ALPHA};
+                    AlphaBlend(memDC, 0, 0, m_winSize, m_winSize,
+                        m_backgroundDC, 0, 0, m_winSize, m_winSize, backgroundBlend);
+                }
             }
         }
 
-        // 2.6 绘制范围圆（网站同款：bell 侦察钟 半径100、forbiddenSeal 奥义封印 半径50，位于路线/图标之下）
-        for (const auto& pt : m_points) {
-            if (pt.radius <= 0) {
-                continue;
-            }
-            const int localX = pt.absX - m_winX;
-            const int localY = pt.absY - m_winY;
-            const int d = pt.radius * 2;
+        if (m_overlayFrameDirty) {
+            Graphics overlayG(m_overlayDC);
+            overlayG.SetInterpolationMode(InterpolationModeHighQualityBilinear);
+            overlayG.SetSmoothingMode(SmoothingModeAntiAlias);
+            overlayG.Clear(Color(0, 0, 0, 0));
 
-            if (pt.type == "bell") {
-                // 网站参数: color=#996600 fillColor=#cf8900 fillOpacity=0.3 opacity=0.8 weight=2
-                SolidBrush bellFill(Color(61, 207, 137, 0));
-                g.FillEllipse(&bellFill, localX - pt.radius, localY - pt.radius, d, d);
-                Pen bellPen(Color(204, 153, 102, 0), 2.0f);
-                g.DrawEllipse(&bellPen, localX - pt.radius, localY - pt.radius, d, d);
+            // 2.5 绘制高资源区域（网站同款：区域图片拉伸到包围盒，位于背景与路线之间）
+            for (const auto& zone : m_zones) {
+                Image* zoneImg = GetZoneImage(zone.id);
+                const MapScreenPoint zoneCenter = m_mapTransform.mapToScreen(zone.mapX, zone.mapY);
+                const int halfW = (std::max)(1, static_cast<int>(std::lround(
+                    m_mapTransform.mapLengthToScreen(zone.halfWMap))));
+                const int halfH = (std::max)(1, static_cast<int>(std::lround(
+                    m_mapTransform.mapLengthToScreen(zone.halfHMap))));
+                const int left = static_cast<int>(std::lround(zoneCenter.x)) - m_winX - halfW;
+                const int top = static_cast<int>(std::lround(zoneCenter.y)) - m_winY - halfH;
+                if (left >= m_winSize || top >= m_winSize ||
+                    left + halfW * 2 <= 0 || top + halfH * 2 <= 0) {
+                    continue;
+                }
+                if (zoneImg) {
+                    overlayG.DrawImage(zoneImg, left, top, halfW * 2, halfH * 2);
+                }
+                else {
+                    // 图片缺失时的兜底：半透明矩形区域
+                    SolidBrush fallbackBrush(Color(48, 255, 196, 0));
+                    overlayG.FillRectangle(&fallbackBrush, left, top, halfW * 2, halfH * 2);
+                }
             }
-            else if (pt.type == "forbiddenSeal") {
-                // 网站参数: color=#0909aa fillColor=#0003aa fillOpacity=0.225 opacity=0.8 weight=2
-                SolidBrush sealFill(Color(46, 0, 3, 170));
-                g.FillEllipse(&sealFill, localX - pt.radius, localY - pt.radius, d, d);
-                Pen sealPen(Color(204, 9, 9, 170), 2.0f);
-                g.DrawEllipse(&sealPen, localX - pt.radius, localY - pt.radius, d, d);
+
+            // 2.6 绘制范围圆（网站同款：bell 侦察钟 半径100、forbiddenSeal 奥义封印 半径50，位于路线/图标之下）
+            for (const auto& pt : m_points) {
+                if (pt.radiusMap <= 0.0) {
+                    continue;
+                }
+                const MapScreenPoint screenPoint = pointToScreen(pt);
+                const int localX = static_cast<int>(std::lround(screenPoint.x)) - m_winX;
+                const int localY = static_cast<int>(std::lround(screenPoint.y)) - m_winY;
+                const int radius = (std::max)(1, static_cast<int>(std::lround(
+                    m_mapTransform.mapLengthToScreen(pt.radiusMap))));
+                const int d = radius * 2;
+                if (localX + radius <= 0 || localY + radius <= 0 ||
+                    localX - radius >= m_winSize || localY - radius >= m_winSize) {
+                    continue;
+                }
+
+                if (pt.type == "bell") {
+                    // 网站参数: color=#996600 fillColor=#cf8900 fillOpacity=0.3 opacity=0.8 weight=2
+                    SolidBrush bellFill(Color(61, 207, 137, 0));
+                    overlayG.FillEllipse(&bellFill, localX - radius, localY - radius, d, d);
+                    Pen bellPen(Color(204, 153, 102, 0), 2.0f);
+                    overlayG.DrawEllipse(&bellPen, localX - radius, localY - radius, d, d);
+                }
+                else if (pt.type == "forbiddenSeal") {
+                    // 网站参数: color=#0909aa fillColor=#0003aa fillOpacity=0.225 opacity=0.8 weight=2
+                    SolidBrush sealFill(Color(46, 0, 3, 170));
+                    overlayG.FillEllipse(&sealFill, localX - radius, localY - radius, d, d);
+                    Pen sealPen(Color(204, 9, 9, 170), 2.0f);
+                    overlayG.DrawEllipse(&sealPen, localX - radius, localY - radius, d, d);
+                }
             }
+
+            drawRoute(overlayG);
+
+            // 3. 绘制图标 (永远显示)
+            const int drawSize = 24;
+            for (const auto& pt : m_points) {
+                Image* icon = GetIcon(pt.type);
+                const MapScreenPoint screenPoint = pointToScreen(pt);
+                const int localX = static_cast<int>(std::lround(screenPoint.x)) - m_winX;
+                const int localY = static_cast<int>(std::lround(screenPoint.y)) - m_winY;
+                if (localX + drawSize / 2 <= 0 || localY + drawSize / 2 <= 0 ||
+                    localX - drawSize / 2 >= m_winSize || localY - drawSize / 2 >= m_winSize) {
+                    continue;
+                }
+                if (icon) {
+                    overlayG.DrawImage(icon, localX - drawSize / 2, localY - drawSize / 2, drawSize, drawSize);
+                }
+                else {
+                    SolidBrush red(Color::Red);
+                    overlayG.FillEllipse(&red, localX - 3, localY - 3, 6, 6);
+                }
+                drawRouteMarkerState(overlayG, pt, localX, localY);
+            }
+
+            // 4. 绘制红边框
+            Pen redPen(Color::Red, 2);
+            overlayG.DrawRectangle(&redPen, 1, 1, m_winSize - 2, m_winSize - 2);
+            m_overlayFrameDirty = false;
         }
 
-        drawRoute(g);
-
-        // 3. 绘制图标 (永远显示)
-        const int drawSize = 24;
-        for (const auto& pt : m_points) {
-            Image* icon = GetIcon(pt.type);
-            int localX = pt.absX - m_winX;
-            int localY = pt.absY - m_winY;
-            if (icon) {
-                g.DrawImage(icon, localX - drawSize / 2, localY - drawSize / 2, drawSize, drawSize);
-            }
-            else {
-                SolidBrush red(Color::Red);
-                g.FillEllipse(&red, localX - 3, localY - 3, 6, 6);
-            }
-            drawRouteMarkerState(g, pt, localX, localY);
-        }
-
-        // 4. 绘制红边框
-        Pen redPen(Color::Red, 2);
-        g.DrawRectangle(&redPen, 1, 1, m_winSize - 2, m_winSize - 2);
+        BLENDFUNCTION overlayBlend{AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
+        AlphaBlend(memDC, 0, 0, m_winSize, m_winSize,
+            m_overlayDC, 0, 0, m_winSize, m_winSize, overlayBlend);
 
         POINT dstPos{m_winX, m_winY};
         SIZE windowSize{m_winSize, m_winSize};
@@ -811,11 +1030,7 @@ void OverlayWindow::paint(HDC hdc) {
                 0, &blend, ULW_ALPHA)) {
             Logger::error("Failed to update layered window. error={}", GetLastError());
         }
-    }
 
-    SelectObject(memDC, oldBitmap);
-    DeleteObject(memBitmap);
-    DeleteDC(memDC);
 }
 
 LRESULT CALLBACK OverlayWindow::WndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -827,6 +1042,7 @@ LRESULT CALLBACK OverlayWindow::WndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM l
         EndPaint(hWnd, &ps);
         return 0;
     }
+    if (msg == WM_NCHITTEST) return HTTRANSPARENT;
     if (msg == WM_ERASEBKGND) return 1;
     if (msg == WM_DESTROY) return 0;
     return DefWindowProc(hWnd, msg, wp, lp);
@@ -837,8 +1053,12 @@ void OverlayWindow::setVisible(bool visible) {
         Logger::info("Overlay visibility changed: visible={} hwnd={}", visible, static_cast<const void*>(m_hwnd));
         ShowWindow(m_hwnd, visible ? SW_SHOW : SW_HIDE);
         if (visible) {
+            m_mapTransform.reset(m_winX, m_winY, m_winSize);
+            m_backgroundFrameDirty = true;
+            m_wheelRemainder = 0;
             // 逐像素 Alpha 窗口不会因为 ShowWindow 自动提交最新帧，显示前主动刷新首帧。
-            InvalidateRect(m_hwnd, nullptr, FALSE);
+            m_framePending = false;
+            invalidate();
             UpdateWindow(m_hwnd);
         }
     }
@@ -852,9 +1072,44 @@ void OverlayWindow::setShowBackground(bool show) {
     Logger::info("Overlay background visibility changed: show={} map_id={} background_loaded={}",
         show, m_currentMapId, m_bgImg != nullptr);
     m_showBackground = show;
-    invalidate();
+    invalidate(false);
 }
 
-void OverlayWindow::invalidate() {
-    if (m_hwnd) InvalidateRect(m_hwnd, NULL, TRUE);
+void OverlayWindow::setBackgroundOpacity(int opacityPercent) {
+    const int clampedOpacity = (std::max)(0, (std::min)(100, opacityPercent));
+    if (m_backgroundOpacity == clampedOpacity) {
+        return;
+    }
+
+    Logger::info("Overlay background opacity changed: previous={} current={} map_id={}",
+        m_backgroundOpacity, clampedOpacity, m_currentMapId);
+    m_backgroundOpacity = clampedOpacity;
+    invalidate(false);
+}
+
+void OverlayWindow::setMapZoomEnabled(bool enabled) {
+    if (m_mapZoomEnabled == enabled) {
+        return;
+    }
+
+    Logger::info("Overlay map zoom changed: previous={} current={} map_id={}",
+        m_mapZoomEnabled, enabled, m_currentMapId);
+    m_mapZoomEnabled = enabled;
+    m_wheelRemainder = 0;
+
+    if (!enabled) {
+        m_mapTransform.reset(m_winX, m_winY, m_winSize);
+        m_backgroundFrameDirty = true;
+        invalidate();
+    }
+}
+
+void OverlayWindow::invalidate(bool contentDirty) {
+    if (contentDirty) {
+        m_overlayFrameDirty = true;
+    }
+    if (m_hwnd && !m_framePending) {
+        m_framePending = true;
+        InvalidateRect(m_hwnd, nullptr, FALSE);
+    }
 }

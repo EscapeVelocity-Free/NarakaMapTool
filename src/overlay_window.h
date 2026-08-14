@@ -8,6 +8,7 @@
 #include <map>
 #include <set>
 #include "nlohmann/json.hpp"
+#include "map_transform.h"
 
 // 定义地图在屏幕上的物理位置常量
 const int MAP_UI_X = 1413;
@@ -24,6 +25,7 @@ public:
     void setMapLayer(int layer);
     void updateResources(const std::vector<std::string>& keys);
     void handleAltAction();
+    void handleMouseWheel(int wheelDelta, int screenX, int screenY, bool injected);
     void toggleRouteVisible();
     void resetRoute();
     void setNearestPointAsRouteStart();
@@ -31,6 +33,8 @@ public:
     void setVisible(bool visible); // 控制窗口显示隐藏
     bool isVisible();              // 获取当前状态
     void setShowBackground(bool show);
+    void setBackgroundOpacity(int opacityPercent);
+    void setMapZoomEnabled(bool enabled);
 private:
     struct Point;
 
@@ -43,8 +47,12 @@ private:
     void rebuildRoute();
     void drawRoute(Gdiplus::Graphics& g);
     void drawRouteMarkerState(Gdiplus::Graphics& g, const Point& pt, int localX, int localY);
+    MapScreenPoint pointToScreen(const Point& point) const;
     int findNearestPointToCursor(double maxDistance) const;
-    void invalidate();
+    bool ensureRenderSurface();
+    bool renderBackgroundFrame();
+    void releaseRenderSurface();
+    void invalidate(bool contentDirty = true);
 
     HWND m_hwnd;
     ULONG_PTR m_gdiToken;
@@ -57,17 +65,17 @@ private:
     struct Point {
         std::string id;
         std::string type;
-        int absX; // 屏幕绝对像素X
-        int absY; // 屏幕绝对像素Y
-        int radius = 0; // 范围圆半径（屏幕像素），0 表示不绘制
+        double mapX; // 2048 地图坐标系中的屏幕方向 X
+        double mapY; // 2048 地图坐标系中的屏幕方向 Y
+        double radiusMap = 0.0; // 范围圆半径（地图坐标），0 表示不绘制
     };
     struct Zone {
         std::string id;      // 稳定ID（区域图片名）
         std::string type;    // "highResourceZone"
-        int absX;            // 区域中心屏幕绝对像素X
-        int absY;            // 区域中心屏幕绝对像素Y
-        int absHalfW;        // 区域半宽（屏幕像素）
-        int absHalfH;        // 区域半高（屏幕像素）
+        double mapX;         // 区域中心地图坐标 X
+        double mapY;         // 区域中心地图坐标 Y
+        double halfWMap;     // 区域半宽（地图坐标）
+        double halfHMap;     // 区域半高（地图坐标）
     };
     std::vector<Point> m_points;
     std::vector<Zone> m_zones;
@@ -81,8 +89,27 @@ private:
     int m_winX;
     int m_winY;
     int m_winSize;
+    HDC m_renderDC = nullptr;
+    HBITMAP m_renderBitmap = nullptr;
+    HGDIOBJ m_renderPreviousBitmap = nullptr;
+    void* m_renderBits = nullptr;
+    HDC m_backgroundDC = nullptr;
+    HBITMAP m_backgroundBitmap = nullptr;
+    HGDIOBJ m_backgroundPreviousBitmap = nullptr;
+    void* m_backgroundBits = nullptr;
+    HDC m_overlayDC = nullptr;
+    HBITMAP m_overlayBitmap = nullptr;
+    HGDIOBJ m_overlayPreviousBitmap = nullptr;
+    void* m_overlayBits = nullptr;
+    MapTransform m_mapTransform;
     bool m_showBackground = false; // 默认不显示
+    int m_backgroundOpacity = 100;
+    bool m_backgroundFrameDirty = true;
+    bool m_overlayFrameDirty = true;
+    bool m_mapZoomEnabled = false; // 默认不允许手动缩放
     bool m_showRoute = false;
+    int m_wheelRemainder = 0;
+    bool m_framePending = false;
 };
 
 #endif

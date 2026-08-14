@@ -7,6 +7,7 @@
 #include "control_panel.h"
 #include "overlay_window.h"
 #include "map_status_detector.h"
+#include "mouse_input_monitor.h"
 #include "config_manager.h"
 #include "logger.h"
 
@@ -61,6 +62,8 @@ int main(int argc, char* argv[]) {
     MapStatusDetector detector;
     Logger::info("Map status detector created.");
 
+    MouseInputMonitor mouseInputMonitor;
+
     // 2. 建立逻辑连接 (信号与槽)
 
     // UI -> Overlay (更新地图和资源)
@@ -103,10 +106,24 @@ int main(int argc, char* argv[]) {
         overlay.resetRoute();
         });
 
+    QObject::connect(&mouseInputMonitor, &MouseInputMonitor::wheelChanged,
+        [&](int wheelDelta, int screenX, int screenY, bool injected) {
+            overlay.handleMouseWheel(wheelDelta, screenX, screenY, injected);
+        });
+
     QObject::connect(&panel, &ControlPanel::toggleBackground, [&](bool show) {
         Logger::info("Main bridge received background visibility update: show={}", show);
         overlay.setShowBackground(show);
         });
+    QObject::connect(&panel, &ControlPanel::backgroundOpacityChanged, [&](int opacityPercent) {
+        Logger::info("Main bridge received background opacity update: percent={}", opacityPercent);
+        overlay.setBackgroundOpacity(opacityPercent);
+        });
+    QObject::connect(&panel, &ControlPanel::toggleMapZoom, [&](bool enabled) {
+        Logger::info("Main bridge received map zoom update: enabled={}", enabled);
+        overlay.setMapZoomEnabled(enabled);
+        });
+    mouseInputMonitor.start();
     Logger::info("All UI, detector, and overlay signal connections established. Entering event loop.");
     return a.exec(); // 开启 Qt 标准事件循环
 }

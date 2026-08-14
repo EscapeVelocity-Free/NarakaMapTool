@@ -15,6 +15,7 @@
 
 class QLabel;
 class QGridLayout;
+class QSlider;
 
 class ControlPanel : public QWidget {
     Q_OBJECT
@@ -29,6 +30,8 @@ signals:
     // 资源勾选信号
     void selectionChanged(const std::vector<std::string>& selectedKeys);
     void toggleBackground(bool show);
+    void backgroundOpacityChanged(int opacityPercent);
+    void toggleMapZoom(bool enabled);
 
 private:
     struct ResourceItem;
@@ -51,7 +54,9 @@ private:
     QPushButton* createResourceChip(const ResourceItem& item);
     QPushButton* createCommandButton(const QString& text, const QString& objectName);
     void applyCardShadow(QFrame* card);
-    void connectActions(QPushButton* selectAllButton, QPushButton* clearAllButton, QCheckBox* showBackgroundBox);
+    void connectActions(QPushButton* selectAllButton, QPushButton* clearAllButton,
+        QCheckBox* showBackgroundBox, QSlider* backgroundOpacitySlider, QLabel* opacityValueLabel,
+        QCheckBox* allowMapZoomBox);
     bool isStormchantMapSelected() const;
     bool isResourceAvailable(const ResourceBinding& binding) const;
     int currentLayer() const;

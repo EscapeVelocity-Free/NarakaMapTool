@@ -17,6 +17,8 @@ set(SOURCES
     src/map_status_detector.cpp
     src/config_manager.cpp
     src/resource_catalog.cpp
+    src/map_transform.cpp
+    src/mouse_input_monitor.cpp
 )
 
 # Windows 资源文件（exe 图标 + 版本信息），仅 MSVC 下编译
@@ -43,7 +45,7 @@ target_link_libraries(NarakaMapTool PRIVATE
     Qt6::QWindowsIntegrationPlugin 
     nlohmann_json::nlohmann_json
     spdlog::spdlog
-    gdiplus gdi32 user32 shlwapi
+    gdiplus gdi32 user32 shlwapi msimg32
 )
 
 # 设置资源拷贝（可选：方便开发调试）

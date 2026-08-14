@@ -9,6 +9,7 @@
 #include <QLabel>
 #include <QScrollArea>
 #include <QSizePolicy>
+#include <QSlider>
 #include <QTimer>
 #include <QVBoxLayout>
 
@@ -253,6 +254,45 @@ void ControlPanel::setupStyle() {
             color: #006bff;
             text-decoration: underline;
         }
+        QWidget#backgroundField {
+            background: transparent;
+        }
+        QLabel#opacityLabel, QLabel#opacityValueLabel {
+            background: transparent;
+            color: #667085;
+            font-size: 10px;
+            font-weight: 800;
+        }
+        QLabel#opacityValueLabel {
+            min-width: 32px;
+            color: #0068e6;
+        }
+        QSlider#backgroundOpacitySlider {
+            min-width: 132px;
+            max-width: 170px;
+            min-height: 16px;
+        }
+        QSlider#backgroundOpacitySlider::groove:horizontal {
+            height: 4px;
+            border-radius: 2px;
+            background: #d9e1ee;
+        }
+        QSlider#backgroundOpacitySlider::sub-page:horizontal {
+            border-radius: 2px;
+            background: #0a84ff;
+        }
+        QSlider#backgroundOpacitySlider::add-page:horizontal {
+            border-radius: 2px;
+            background: #d9e1ee;
+        }
+        QSlider#backgroundOpacitySlider::handle:horizontal {
+            width: 14px;
+            height: 14px;
+            margin: -5px 0;
+            border: 2px solid #ffffff;
+            border-radius: 7px;
+            background: #0068e6;
+        }
         QLabel#sectionTitle {
             background: transparent;
             color: #070a11;
@@ -435,10 +475,42 @@ QFrame* ControlPanel::createHeaderCard() {
     layerField->addWidget(m_layerCombo);
     layout->addLayout(layerField);
 
-    auto* showBackgroundBox = new QCheckBox(QString::fromUtf8("背景地图"), card);
+    auto* backgroundField = new QWidget(card);
+    backgroundField->setObjectName("backgroundField");
+    backgroundField->setMinimumWidth(150);
+    auto* backgroundLayout = new QVBoxLayout(backgroundField);
+    backgroundLayout->setContentsMargins(0, 0, 0, 0);
+    backgroundLayout->setSpacing(2);
+
+    auto* backgroundTopLine = new QHBoxLayout();
+    backgroundTopLine->setContentsMargins(0, 0, 0, 0);
+    backgroundTopLine->setSpacing(6);
+    auto* showBackgroundBox = new QCheckBox(QString::fromUtf8("背景地图"), backgroundField);
     showBackgroundBox->setObjectName("switchCheck");
     showBackgroundBox->setChecked(false);
-    layout->addWidget(showBackgroundBox);
+    backgroundTopLine->addWidget(showBackgroundBox);
+    auto* opacityLabel = new QLabel(QString::fromUtf8("透明度"), backgroundField);
+    opacityLabel->setObjectName("opacityLabel");
+    backgroundTopLine->addWidget(opacityLabel);
+    auto* opacityValueLabel = new QLabel(QString::fromUtf8("100%"), backgroundField);
+    opacityValueLabel->setObjectName("opacityValueLabel");
+    backgroundTopLine->addWidget(opacityValueLabel);
+    backgroundTopLine->addStretch();
+    backgroundLayout->addLayout(backgroundTopLine);
+
+    auto* backgroundOpacitySlider = new QSlider(Qt::Horizontal, backgroundField);
+    backgroundOpacitySlider->setObjectName("backgroundOpacitySlider");
+    backgroundOpacitySlider->setRange(0, 100);
+    backgroundOpacitySlider->setValue(100);
+    backgroundOpacitySlider->setCursor(Qt::PointingHandCursor);
+    backgroundLayout->addWidget(backgroundOpacitySlider);
+    layout->addWidget(backgroundField);
+
+    auto* allowMapZoomBox = new QCheckBox(QString::fromUtf8("允许缩放"), card);
+    allowMapZoomBox->setObjectName("switchCheck");
+    allowMapZoomBox->setChecked(false);
+    allowMapZoomBox->setToolTip(QString::fromUtf8("开启后可使用鼠标滚轮同步缩放地图"));
+    layout->addWidget(allowMapZoomBox);
 
     auto* selectAllButton = createCommandButton(QString::fromUtf8("全部显示"), "primaryButton");
     auto* clearAllButton = createCommandButton(QString::fromUtf8("全部隐藏"), "secondaryButton");
@@ -453,7 +525,8 @@ QFrame* ControlPanel::createHeaderCard() {
     sourceLink->setToolTip(QString::fromUtf8("在浏览器中打开 NarakaMapTool 开源仓库"));
     layout->addWidget(sourceLink);
 
-    connectActions(selectAllButton, clearAllButton, showBackgroundBox);
+    connectActions(selectAllButton, clearAllButton, showBackgroundBox,
+        backgroundOpacitySlider, opacityValueLabel, allowMapZoomBox);
     return card;
 }
 
@@ -528,10 +601,22 @@ void ControlPanel::applyCardShadow(QFrame* card) {
     card->setGraphicsEffect(shadow);
 }
 
-void ControlPanel::connectActions(QPushButton* selectAllButton, QPushButton* clearAllButton, QCheckBox* showBackgroundBox) {
+void ControlPanel::connectActions(QPushButton* selectAllButton, QPushButton* clearAllButton,
+    QCheckBox* showBackgroundBox, QSlider* backgroundOpacitySlider, QLabel* opacityValueLabel,
+    QCheckBox* allowMapZoomBox) {
     connect(showBackgroundBox, &QCheckBox::stateChanged, [this](int state) {
         Logger::info("Control panel background switch changed: show={}", state == Qt::Checked);
         emit toggleBackground(state == Qt::Checked);
+    });
+
+    connect(backgroundOpacitySlider, &QSlider::valueChanged, [this, opacityValueLabel](int value) {
+        opacityValueLabel->setText(QString::fromUtf8("%1%").arg(value));
+        emit backgroundOpacityChanged(value);
+    });
+
+    connect(allowMapZoomBox, &QCheckBox::toggled, [this](bool enabled) {
+        Logger::info("Control panel map zoom switch changed: enabled={}", enabled);
+        emit toggleMapZoom(enabled);
     });
 
     connect(m_mapCombo, &QComboBox::currentIndexChanged, [this](int) {
