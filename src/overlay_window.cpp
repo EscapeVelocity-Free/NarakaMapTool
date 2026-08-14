@@ -254,7 +254,7 @@ void OverlayWindow::init(HINSTANCE hInst) {
     wcex.lpfnWndProc = WndProc;
     wcex.hInstance = hInst;
     wcex.lpszClassName = L"NarakaOverlayWindowClass";
-    wcex.hbrBackground = CreateSolidBrush(RGB(1, 1, 1)); // 背景刷为透明键色
+    wcex.hbrBackground = nullptr; // 背景刷为透明键色（逐像素 Alpha 模式下不使用窗口类背景刷）
     const ATOM windowClass = RegisterClassExW(&wcex);
     if (windowClass) {
         Logger::info("Overlay window class registered successfully: atom={}", windowClass);
@@ -272,7 +272,7 @@ void OverlayWindow::init(HINSTANCE hInst) {
     else {
         Logger::error("Overlay window creation failed: last_error={}", static_cast<unsigned long>(GetLastError()));
     }
-    SetLayeredWindowAttributes(m_hwnd, RGB(1, 1, 1), 0, LWA_COLORKEY);
+    // 不再使用颜色键透明，避免半透明 PNG 和抗锯齿像素被错误抠成黑白块。
     ShowWindow(m_hwnd, SW_SHOW);
 }
 
@@ -702,89 +702,118 @@ Gdiplus::Image* OverlayWindow::GetZoneImage(const std::string& zoneId) {
 }
 
 void OverlayWindow::paint(HDC hdc) {
-    // 传统的双缓冲逻辑
-    HDC memDC = CreateCompatibleDC(hdc);
-    HBITMAP memBitmap = CreateCompatibleBitmap(hdc, m_winSize, m_winSize);
-    SelectObject(memDC, memBitmap);
-
-    Graphics g(memDC);
-    g.SetInterpolationMode(InterpolationModeHighQualityBicubic);
-    g.SetSmoothingMode(SmoothingModeAntiAlias);
-
-    // 1. 填充底色为透明键色
-    SolidBrush transBrush(Color(255, 1, 1, 1));
-    g.FillRectangle(&transBrush, 0, 0, m_winSize, m_winSize);
-
-    // 2. 根据开关决定是否绘制地图
-    if (m_showBackground && m_bgImg && m_bgImg->GetLastStatus() == Ok) {
-        g.DrawImage(m_bgImg, 0, 0, m_winSize, m_winSize);
+    // 使用 32 位 ARGB DIB，避免颜色键透明破坏半透明 PNG、范围图层和抗锯齿边缘。
+    (void)hdc;
+    HDC memDC = CreateCompatibleDC(nullptr);
+    if (!memDC) {
+        Logger::error("Failed to create layered window memory DC.");
+        return;
     }
 
-    // 2.5 绘制高资源区域（网站同款：区域图片拉伸到包围盒，位于背景与路线之间）
-    for (const auto& zone : m_zones) {
-        Image* zoneImg = GetZoneImage(zone.id);
-        const int left = zone.absX - m_winX - zone.absHalfW;
-        const int top = zone.absY - m_winY - zone.absHalfH;
-        if (zoneImg) {
-            g.DrawImage(zoneImg, left, top, zone.absHalfW * 2, zone.absHalfH * 2);
+    BITMAPINFO bitmapInfo{};
+    bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bitmapInfo.bmiHeader.biWidth = m_winSize;
+    bitmapInfo.bmiHeader.biHeight = -m_winSize;
+    bitmapInfo.bmiHeader.biPlanes = 1;
+    bitmapInfo.bmiHeader.biBitCount = 32;
+    bitmapInfo.bmiHeader.biCompression = BI_RGB;
+
+    void* bitmapBits = nullptr;
+    HBITMAP memBitmap = CreateDIBSection(
+        memDC, &bitmapInfo, DIB_RGB_COLORS, &bitmapBits, nullptr, 0);
+    if (!memBitmap) {
+        Logger::error("Failed to create 32-bit ARGB DIB for layered window.");
+        DeleteDC(memDC);
+        return;
+    }
+
+    HGDIOBJ oldBitmap = SelectObject(memDC, memBitmap);
+
+    {
+        Graphics g(memDC);
+        g.SetInterpolationMode(InterpolationModeHighQualityBicubic);
+        g.SetSmoothingMode(SmoothingModeAntiAlias);
+        g.Clear(Color(0, 0, 0, 0));
+
+        // 1. 根据开关决定是否绘制地图
+        if (m_showBackground && m_bgImg && m_bgImg->GetLastStatus() == Ok) {
+            g.DrawImage(m_bgImg, 0, 0, m_winSize, m_winSize);
         }
-        else {
-            // 图片缺失时的兜底：半透明矩形区域
-            SolidBrush fallbackBrush(Color(48, 255, 196, 0));
-            g.FillRectangle(&fallbackBrush, left, top, zone.absHalfW * 2, zone.absHalfH * 2);
+
+        // 2.5 绘制高资源区域（网站同款：区域图片拉伸到包围盒，位于背景与路线之间）
+        for (const auto& zone : m_zones) {
+            Image* zoneImg = GetZoneImage(zone.id);
+            const int left = zone.absX - m_winX - zone.absHalfW;
+            const int top = zone.absY - m_winY - zone.absHalfH;
+            if (zoneImg) {
+                g.DrawImage(zoneImg, left, top, zone.absHalfW * 2, zone.absHalfH * 2);
+            }
+            else {
+                // 图片缺失时的兜底：半透明矩形区域
+                SolidBrush fallbackBrush(Color(48, 255, 196, 0));
+                g.FillRectangle(&fallbackBrush, left, top, zone.absHalfW * 2, zone.absHalfH * 2);
+            }
+        }
+
+        // 2.6 绘制范围圆（网站同款：bell 侦察钟 半径100、forbiddenSeal 奥义封印 半径50，位于路线/图标之下）
+        for (const auto& pt : m_points) {
+            if (pt.radius <= 0) {
+                continue;
+            }
+            const int localX = pt.absX - m_winX;
+            const int localY = pt.absY - m_winY;
+            const int d = pt.radius * 2;
+
+            if (pt.type == "bell") {
+                // 网站参数: color=#996600 fillColor=#cf8900 fillOpacity=0.3 opacity=0.8 weight=2
+                SolidBrush bellFill(Color(61, 207, 137, 0));
+                g.FillEllipse(&bellFill, localX - pt.radius, localY - pt.radius, d, d);
+                Pen bellPen(Color(204, 153, 102, 0), 2.0f);
+                g.DrawEllipse(&bellPen, localX - pt.radius, localY - pt.radius, d, d);
+            }
+            else if (pt.type == "forbiddenSeal") {
+                // 网站参数: color=#0909aa fillColor=#0003aa fillOpacity=0.225 opacity=0.8 weight=2
+                SolidBrush sealFill(Color(46, 0, 3, 170));
+                g.FillEllipse(&sealFill, localX - pt.radius, localY - pt.radius, d, d);
+                Pen sealPen(Color(204, 9, 9, 170), 2.0f);
+                g.DrawEllipse(&sealPen, localX - pt.radius, localY - pt.radius, d, d);
+            }
+        }
+
+        drawRoute(g);
+
+        // 3. 绘制图标 (永远显示)
+        const int drawSize = 24;
+        for (const auto& pt : m_points) {
+            Image* icon = GetIcon(pt.type);
+            int localX = pt.absX - m_winX;
+            int localY = pt.absY - m_winY;
+            if (icon) {
+                g.DrawImage(icon, localX - drawSize / 2, localY - drawSize / 2, drawSize, drawSize);
+            }
+            else {
+                SolidBrush red(Color::Red);
+                g.FillEllipse(&red, localX - 3, localY - 3, 6, 6);
+            }
+            drawRouteMarkerState(g, pt, localX, localY);
+        }
+
+        // 4. 绘制红边框
+        Pen redPen(Color::Red, 2);
+        g.DrawRectangle(&redPen, 1, 1, m_winSize - 2, m_winSize - 2);
+
+        POINT dstPos{m_winX, m_winY};
+        SIZE windowSize{m_winSize, m_winSize};
+        POINT srcPos{0, 0};
+        BLENDFUNCTION blend{AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
+        if (!UpdateLayeredWindow(
+                m_hwnd, nullptr, &dstPos, &windowSize, memDC, &srcPos,
+                0, &blend, ULW_ALPHA)) {
+            Logger::error("Failed to update layered window. error={}", GetLastError());
         }
     }
 
-    // 2.6 绘制范围圆（网站同款：bell 侦察钟 半径100、forbiddenSeal 奥义封印 半径50，位于路线/图标之下）
-    for (const auto& pt : m_points) {
-        if (pt.radius <= 0) {
-            continue;
-        }
-        const int localX = pt.absX - m_winX;
-        const int localY = pt.absY - m_winY;
-        const int d = pt.radius * 2;
-
-        if (pt.type == "bell") {
-            // 网站参数: color=#996600 fillColor=#cf8900 fillOpacity=0.3 opacity=0.8 weight=2
-            SolidBrush bellFill(Color(61, 207, 137, 0));
-            g.FillEllipse(&bellFill, localX - pt.radius, localY - pt.radius, d, d);
-            Pen bellPen(Color(204, 153, 102, 0), 2.0f);
-            g.DrawEllipse(&bellPen, localX - pt.radius, localY - pt.radius, d, d);
-        }
-        else if (pt.type == "forbiddenSeal") {
-            // 网站参数: color=#0909aa fillColor=#0003aa fillOpacity=0.225 opacity=0.8 weight=2
-            SolidBrush sealFill(Color(46, 0, 3, 170));
-            g.FillEllipse(&sealFill, localX - pt.radius, localY - pt.radius, d, d);
-            Pen sealPen(Color(204, 9, 9, 170), 2.0f);
-            g.DrawEllipse(&sealPen, localX - pt.radius, localY - pt.radius, d, d);
-        }
-    }
-
-    drawRoute(g);
-
-    // 3. 绘制图标 (永远显示)
-    const int drawSize = 24;
-    for (const auto& pt : m_points) {
-        Image* icon = GetIcon(pt.type);
-        int localX = pt.absX - m_winX;
-        int localY = pt.absY - m_winY;
-        if (icon) {
-            g.DrawImage(icon, localX - drawSize / 2, localY - drawSize / 2, drawSize, drawSize);
-        }
-        else {
-            SolidBrush red(Color::Red);
-            g.FillEllipse(&red, localX - 3, localY - 3, 6, 6);
-        }
-        drawRouteMarkerState(g, pt, localX, localY);
-    }
-
-    // 4. 绘制红边框
-    Pen redPen(Color::Red, 2);
-    g.DrawRectangle(&redPen, 1, 1, m_winSize - 2, m_winSize - 2);
-
-    // 贴图到屏幕
-    BitBlt(hdc, 0, 0, m_winSize, m_winSize, memDC, 0, 0, SRCCOPY);
-
+    SelectObject(memDC, oldBitmap);
     DeleteObject(memBitmap);
     DeleteDC(memDC);
 }
@@ -807,6 +836,11 @@ void OverlayWindow::setVisible(bool visible) {
     if (m_hwnd) {
         Logger::info("Overlay visibility changed: visible={} hwnd={}", visible, static_cast<const void*>(m_hwnd));
         ShowWindow(m_hwnd, visible ? SW_SHOW : SW_HIDE);
+        if (visible) {
+            // 逐像素 Alpha 窗口不会因为 ShowWindow 自动提交最新帧，显示前主动刷新首帧。
+            InvalidateRect(m_hwnd, nullptr, FALSE);
+            UpdateWindow(m_hwnd);
+        }
     }
 }
 
