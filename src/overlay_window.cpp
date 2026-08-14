@@ -1049,18 +1049,45 @@ LRESULT CALLBACK OverlayWindow::WndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM l
 }
 
 void OverlayWindow::setVisible(bool visible) {
-    if (m_hwnd) {
-        Logger::info("Overlay visibility changed: visible={} hwnd={}", visible, static_cast<const void*>(m_hwnd));
-        ShowWindow(m_hwnd, visible ? SW_SHOW : SW_HIDE);
-        if (visible) {
-            m_mapTransform.reset(m_winX, m_winY, m_winSize);
-            m_backgroundFrameDirty = true;
-            m_wheelRemainder = 0;
-            // 逐像素 Alpha 窗口不会因为 ShowWindow 自动提交最新帧，显示前主动刷新首帧。
-            m_framePending = false;
-            invalidate();
-            UpdateWindow(m_hwnd);
-        }
+    m_mapDetectedVisible = visible;
+    Logger::info("Overlay detected map visibility changed: detected={} always_visible={} effective={}",
+        m_mapDetectedVisible, m_alwaysVisible, m_mapDetectedVisible || m_alwaysVisible);
+    updateVisibility();
+}
+
+void OverlayWindow::setAlwaysVisible(bool enabled) {
+    if (m_alwaysVisible == enabled) {
+        return;
+    }
+
+    Logger::info("Overlay always-visible mode changed: previous={} current={} detected_visible={}",
+        m_alwaysVisible, enabled, m_mapDetectedVisible);
+    m_alwaysVisible = enabled;
+    updateVisibility();
+}
+
+void OverlayWindow::updateVisibility() {
+    if (!m_hwnd) {
+        return;
+    }
+
+    const bool shouldBeVisible = m_mapDetectedVisible || m_alwaysVisible;
+    const bool currentlyVisible = IsWindowVisible(m_hwnd) != FALSE;
+    if (currentlyVisible == shouldBeVisible) {
+        return;
+    }
+
+    Logger::info("Overlay visibility changed: visible={} detected_visible={} always_visible={} hwnd={}",
+        shouldBeVisible, m_mapDetectedVisible, m_alwaysVisible, static_cast<const void*>(m_hwnd));
+    ShowWindow(m_hwnd, shouldBeVisible ? SW_SHOW : SW_HIDE);
+    if (shouldBeVisible) {
+        m_mapTransform.reset(m_winX, m_winY, m_winSize);
+        m_backgroundFrameDirty = true;
+        m_wheelRemainder = 0;
+        // 逐像素 Alpha 窗口不会因为 ShowWindow 自动提交最新帧，显示前主动刷新首帧。
+        m_framePending = false;
+        invalidate();
+        UpdateWindow(m_hwnd);
     }
 }
 

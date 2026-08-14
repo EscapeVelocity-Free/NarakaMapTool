@@ -14,6 +14,7 @@
 #include "resource_catalog.h"
 
 class QLabel;
+class QLayout;
 class QGridLayout;
 class QSlider;
 
@@ -32,17 +33,18 @@ signals:
     void toggleBackground(bool show);
     void backgroundOpacityChanged(int opacityPercent);
     void toggleMapZoom(bool enabled);
+    void toggleAlwaysVisible(bool enabled);
 
 private:
     struct ResourceItem;
     struct ResourceGroup;
     struct ResourceBinding {
         std::string key;
+        std::string displayName;
     };
     struct ResourceSectionView {
         QFrame* card;
-        QGridLayout* grid;
-        int columns;
+        QLayout* layout;
         std::vector<QPushButton*> buttons;
     };
 
@@ -50,13 +52,15 @@ private:
     void setupWindow();
     void setupStyle();
     QFrame* createHeaderCard();
+    QFrame* createControlSidebar();
+    QWidget* createResourcePanel();
     QFrame* createResourceSection(const ResourceGroup& group);
     QPushButton* createResourceChip(const ResourceItem& item);
     QPushButton* createCommandButton(const QString& text, const QString& objectName);
     void applyCardShadow(QFrame* card);
     void connectActions(QPushButton* selectAllButton, QPushButton* clearAllButton,
         QCheckBox* showBackgroundBox, QSlider* backgroundOpacitySlider, QLabel* opacityValueLabel,
-        QCheckBox* allowMapZoomBox);
+        QCheckBox* allowMapZoomBox, QCheckBox* alwaysVisibleBox);
     bool isStormchantMapSelected() const;
     bool isResourceAvailable(const ResourceBinding& binding) const;
     int currentLayer() const;
@@ -69,6 +73,16 @@ private:
     std::vector<ResourceSectionView> m_resourceSections;
     ResourceCatalog m_resourceCatalog;
     QComboBox* m_mapCombo = nullptr;
+    QWidget* m_layerField = nullptr;
     QLabel* m_layerLabel = nullptr;
     QComboBox* m_layerCombo = nullptr;
+    QLabel* m_selectionSummaryLabel = nullptr;
+    QGridLayout* m_resourceGrid = nullptr;
+    QCheckBox* m_showBackgroundBox = nullptr;
+    QSlider* m_backgroundOpacitySlider = nullptr;
+    QLabel* m_opacityValueLabel = nullptr;
+    QCheckBox* m_allowMapZoomBox = nullptr;
+    QCheckBox* m_alwaysVisibleBox = nullptr;
+    QPushButton* m_selectAllButton = nullptr;
+    QPushButton* m_clearAllButton = nullptr;
 };

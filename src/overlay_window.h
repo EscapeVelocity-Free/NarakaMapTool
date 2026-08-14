@@ -35,6 +35,7 @@ public:
     void setShowBackground(bool show);
     void setBackgroundOpacity(int opacityPercent);
     void setMapZoomEnabled(bool enabled);
+    void setAlwaysVisible(bool enabled);
 private:
     struct Point;
 
@@ -52,6 +53,7 @@ private:
     bool ensureRenderSurface();
     bool renderBackgroundFrame();
     void releaseRenderSurface();
+    void updateVisibility();
     void invalidate(bool contentDirty = true);
 
     HWND m_hwnd;
@@ -107,6 +109,8 @@ private:
     bool m_backgroundFrameDirty = true;
     bool m_overlayFrameDirty = true;
     bool m_mapZoomEnabled = false; // 默认不允许手动缩放
+    bool m_mapDetectedVisible = false; // 默认等待游戏地图检测结果
+    bool m_alwaysVisible = false; // 默认跟随游戏地图显示状态
     bool m_showRoute = false;
     int m_wheelRemainder = 0;
     bool m_framePending = false;
