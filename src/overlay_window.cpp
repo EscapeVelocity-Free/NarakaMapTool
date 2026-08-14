@@ -440,6 +440,7 @@ void OverlayWindow::handleAltAction() {
         if (target && min_dist < 100.0) {
             const int targetX = static_cast<int>(std::lround(targetScreen.x));
             const int targetY = static_cast<int>(std::lround(targetScreen.y));
+            const MapTransform::State previousTransform = m_mapTransform.captureState();
             const int zoomSteps = m_mapTransform.stepsToMaxZoom();
             Logger::info("Starting auto-navigation: id={} type={} target=({}, {}) distance={:.2f} zoom_step={} zoom_steps={}",
                 target->id, target->type, targetX, targetY, min_dist,
@@ -474,6 +475,15 @@ void OverlayWindow::handleAltAction() {
             // Step 6: 点击 ESC 键 (VK_ESCAPE)
             Win32_KeyPress(VK_ESCAPE);
             Logger::debug("Auto-navigation step 6: sent Escape key.");
+
+            // 恢复 Alt 操作前的覆盖层缩放，避免自动标记改变用户当前视图。
+            if (zoomSteps > 0) {
+                m_mapTransform.restoreState(previousTransform);
+                m_backgroundFrameDirty = true;
+                invalidate();
+                Logger::debug("Auto-navigation restored overlay transform: zoom_step={}",
+                    previousTransform.zoomStep);
+            }
 
             Logger::info("Auto-navigation completed successfully for resource id={}", target->id);
         }

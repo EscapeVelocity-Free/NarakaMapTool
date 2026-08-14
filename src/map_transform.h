@@ -13,6 +13,12 @@ public:
     static constexpr int kMaxZoomSteps = 32;
     static constexpr double kMapCoordinateSize = 2048.0;
 
+    struct State {
+        double originX = 0.0;
+        double originY = 0.0;
+        int zoomStep = 0;
+    };
+
     MapTransform();
 
     void reset(double originX, double originY, double viewportSize);
@@ -29,6 +35,8 @@ public:
     int stepsToMaxZoom() const;
     double zoomScale() const;
     double viewportSize() const;
+    State captureState() const;
+    void restoreState(const State& state);
 
 private:
     static std::array<double, kMaxZoomSteps + 1> makeDefaultZoomScales();

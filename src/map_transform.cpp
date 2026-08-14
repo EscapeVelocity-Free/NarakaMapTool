@@ -123,6 +123,17 @@ double MapTransform::viewportSize() const {
     return m_viewportSize;
 }
 
+MapTransform::State MapTransform::captureState() const {
+    return {m_originX, m_originY, m_zoomStep};
+}
+
+void MapTransform::restoreState(const State& state) {
+    m_originX = state.originX;
+    m_originY = state.originY;
+    m_zoomStep = std::clamp(state.zoomStep, 0, kMaxZoomSteps);
+    clampOriginToViewport();
+}
+
 void MapTransform::clampOriginToViewport() {
     const double totalMapSize = mapLengthToScreen(kMapCoordinateSize);
     if (totalMapSize <= m_viewportSize) {
