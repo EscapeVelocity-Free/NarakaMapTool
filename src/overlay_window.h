@@ -46,6 +46,7 @@ private:
     void loadMapBackground();
     Gdiplus::Image* GetIcon(std::string type);
     Gdiplus::Image* GetZoneImage(const std::string& zoneId);
+    void clearZoneImageCache();
     void rebuildRoute();
     void pollRouteResult();
     void restoreZoomQuality();

@@ -233,6 +233,15 @@ OverlayWindow::~OverlayWindow() {
     GdiplusShutdown(m_gdiToken);
 }
 
+void OverlayWindow::clearZoneImageCache() {
+    // 区域图按地图划分（每张地图约 16-34 张），切图后旧地图区域图不再使用，
+    // 及时释放避免 7 张地图的 147 张图片全部常驻内存（性能优化）。
+    for (auto& pair : m_zoneImageCache) {
+        delete pair.second;
+    }
+    m_zoneImageCache.clear();
+}
+
 void OverlayWindow::setMap(const std::string& mapId, const std::string& mapName) {
     Logger::info("Overlay map switch requested: previous_id={} target_id={} target_name={} background_enabled={}",
         m_currentMapId, mapId, mapName, m_showBackground);
@@ -243,6 +252,7 @@ void OverlayWindow::setMap(const std::string& mapId, const std::string& mapName)
     m_excludedPointIds.clear();
     m_routeOrder.clear();
     m_mapTransform.reset(m_winX, m_winY, m_winSize);
+    clearZoneImageCache();
 
     loadMapBackground();
     loadData();
@@ -266,6 +276,7 @@ void OverlayWindow::setMapLayer(int layer) {
         m_currentMapId, m_currentLayer, layer);
     m_currentLayer = layer;
     m_mapTransform.reset(m_winX, m_winY, m_winSize);
+    clearZoneImageCache();
     loadMapBackground();
     loadData();
     invalidate();
