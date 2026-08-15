@@ -1,4 +1,4 @@
-#include "mouse_input_monitor.h"
+﻿#include "mouse_input_monitor.h"
 
 #include <chrono>
 
@@ -130,8 +130,19 @@ bool MouseInputMonitor::enqueueWheel(const WheelEvent& event) {
         return false;
     }
 
+    const bool wasEmpty = writeIndex == readIndex;
     m_wheelQueue[writeIndex % kWheelQueueCapacity] = event;
     m_wheelWriteIndex.store(writeIndex + 1, std::memory_order_release);
+
+    // 性能优化：队列从空变为非空时，唤醒主线程定时器处理事件；
+    // 队列为空时 flushWheel 会停掉定时器，避免无滚轮事件时每 2ms 空转。
+    if (wasEmpty) {
+        QMetaObject::invokeMethod(this, [this]() {
+            if (m_running.load(std::memory_order_acquire)) {
+                m_flushTimer.start();
+            }
+        }, Qt::QueuedConnection);
+    }
     return true;
 }
 
@@ -148,6 +159,12 @@ void MouseInputMonitor::flushWheel() {
         emit wheelChanged(event.delta, event.screenX, event.screenY, false);
     }
     m_wheelReadIndex.store(readIndex, std::memory_order_release);
+
+    // 队列已清空（重新读取最新写入索引，避免 flush 期间新入队事件被漏掉）：
+    // 停掉定时器，等待下一次滚轮事件再唤醒。
+    if (readIndex == m_wheelWriteIndex.load(std::memory_order_acquire)) {
+        m_flushTimer.stop();
+    }
 
     const uint64_t dropped = m_droppedWheelEvents.exchange(0, std::memory_order_relaxed);
     if (dropped != 0) {
