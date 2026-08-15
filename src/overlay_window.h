@@ -74,6 +74,7 @@ private:
         double mapX; // 2048 地图坐标系中的屏幕方向 X
         double mapY; // 2048 地图坐标系中的屏幕方向 Y
         double radiusMap = 0.0; // 范围圆半径（地图坐标），0 表示不绘制
+        Gdiplus::Image* icon = nullptr; // 图标缓存指针（loadData 时解析一次，绘制循环直接使用）
     };
     struct Zone {
         std::string id;      // 稳定ID（区域图片名）

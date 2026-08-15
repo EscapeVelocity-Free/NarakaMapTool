@@ -432,7 +432,8 @@ void OverlayWindow::loadData() {
                                 else if (key == "forbiddenSeal") {
                                     radiusMap = 50.0;
                                 }
-                                m_points.push_back({ id, key, mapX, mapY, radiusMap });
+                                // 图标指针提前解析缓存，绘制循环不再每帧 std::map 查找（性能优化）
+                                m_points.push_back({ id, key, mapX, mapY, radiusMap, GetIcon(key) });
                             }
                             ++markerIndex;
                         }
@@ -1153,7 +1154,8 @@ void OverlayWindow::paint(HDC hdc) {
                 // 3. 绘制图标 (永远显示)
                 const int drawSize = 24;
                 for (const auto& pt : m_points) {
-                    Image* icon = GetIcon(pt.type);
+                    // 图标指针已在 loadData 时缓存，避免每帧 std::map 查找（性能优化）
+                    Image* icon = pt.icon;
                     const MapScreenPoint screenPoint = pointToScreen(pt);
                     const int localX = static_cast<int>(std::lround(screenPoint.x)) - m_winX;
                     const int localY = static_cast<int>(std::lround(screenPoint.y)) - m_winY;
