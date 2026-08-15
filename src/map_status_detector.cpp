@@ -1,15 +1,22 @@
 ﻿#include "map_status_detector.h"
 #include <cmath>
+#include <algorithm>
 #include "config_manager.h"
 #include "logger.h"
+
+namespace {
+// 采样缓冲边长（固定 7x7），最大支持半径 3；半径超限时 clamp 避免越界
+constexpr int kSampleBufferSize = 7;
+constexpr int kSampleMaxRadius = (kSampleBufferSize - 1) / 2;
+}
 
 MapStatusDetector::MapStatusDetector(QObject* parent) : QObject(parent) {
     // 预创建采样缓冲（7x7 足够容纳检测点周边区域），复用避免每次 tick 创建/销毁
     m_sampleDC = CreateCompatibleDC(nullptr);
     BITMAPINFO bitmapInfo{};
     bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bitmapInfo.bmiHeader.biWidth = 7;
-    bitmapInfo.bmiHeader.biHeight = -7; // top-down
+    bitmapInfo.bmiHeader.biWidth = kSampleBufferSize;
+    bitmapInfo.bmiHeader.biHeight = -kSampleBufferSize; // top-down
     bitmapInfo.bmiHeader.biPlanes = 1;
     bitmapInfo.bmiHeader.biBitCount = 32;
     bitmapInfo.bmiHeader.biCompression = BI_RGB;
@@ -113,8 +120,14 @@ void MapStatusDetector::clearRouteKeyStates() {
 
 bool MapStatusDetector::isPixelAreaWhite(int radius) {
     // 性能优化：一次 BitBlt 把检测点周边 (2*radius+1)^2 区域拷入内存 DIB，
-    // 再从内存读取像素，替代 25 次跨 GDI 的 GetPixel 调用。
+    // 再从内存读取像素，替代多次跨 GDI 的 GetPixel 调用。
     if (!m_sampleDC || !m_sampleBitmap) {
+        return false;
+    }
+
+    // clamp 半径到采样缓冲容量内，避免越界（当前调用半径=2）
+    radius = (std::min)(radius, kSampleMaxRadius);
+    if (radius < 0) {
         return false;
     }
 
