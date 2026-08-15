@@ -1,4 +1,5 @@
 ﻿#include "overlay_window.h"
+#include <array>
 #include <fstream>
 #include <filesystem>
 #include <shlwapi.h>
@@ -99,10 +100,23 @@ void OptimizeRoute2Opt(const std::vector<RouteCoord>& coords, std::vector<size_t
 // GDI+ 在 32bpp DIB 上绘制时输出的是 straight (non-premultiplied) alpha，
 // 而 AlphaBlend(AC_SRC_ALPHA) 与 UpdateLayeredWindow(ULW_ALPHA) 都要求 premultiplied alpha。
 // 此函数把 32bpp ARGB 像素逐像素预乘，避免半透明内容（范围圆、区域图片、抗锯齿边缘）偏亮。
+// 使用 256x256 查找表（premul[a][c] = c*a/255）替代逐像素乘除（性能优化）。
 void PremultiplyDibPixels(void* bits, int pixelCount) {
     if (!bits || pixelCount <= 0) {
         return;
     }
+
+    static const std::array<std::array<unsigned char, 256>, 256> kPremulTable = []() {
+        std::array<std::array<unsigned char, 256>, 256> table{};
+        for (int alpha = 0; alpha < 256; ++alpha) {
+            for (int channel = 0; channel < 256; ++channel) {
+                table[static_cast<size_t>(alpha)][static_cast<size_t>(channel)] =
+                    static_cast<unsigned char>((channel * alpha + 127) / 255);
+            }
+        }
+        return table;
+    }();
+
     auto* pixels = static_cast<unsigned char*>(bits);
     for (int index = 0; index < pixelCount; ++index) {
         unsigned char* p = pixels + index * 4;
@@ -113,9 +127,9 @@ void PremultiplyDibPixels(void* bits, int pixelCount) {
             p[2] = 0;
         }
         else if (alpha != 255) {
-            p[0] = static_cast<unsigned char>((p[0] * alpha + 127) / 255);
-            p[1] = static_cast<unsigned char>((p[1] * alpha + 127) / 255);
-            p[2] = static_cast<unsigned char>((p[2] * alpha + 127) / 255);
+            p[0] = kPremulTable[alpha][p[0]];
+            p[1] = kPremulTable[alpha][p[1]];
+            p[2] = kPremulTable[alpha][p[2]];
         }
     }
 }
