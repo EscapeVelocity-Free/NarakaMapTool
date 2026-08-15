@@ -7,7 +7,10 @@
 #include <vector>
 #include <map>
 #include <set>
-#include <future>
+#include <optional>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 #include "nlohmann/json.hpp"
 #include "map_transform.h"
 
@@ -89,9 +92,6 @@ private:
     std::vector<size_t> m_routeOrder;
     std::set<std::string> m_excludedPointIds;
     std::string m_routeStartId;
-    // 路线后台计算：future 持有计算任务，m_routeRevision 用于丢弃过期结果
-    std::future<std::pair<uint64_t, std::vector<size_t>>> m_routeFuture;
-    uint64_t m_routeRevision = 0;
     std::map<std::string, Gdiplus::Image*> m_iconCache;
     std::map<std::string, Gdiplus::Image*> m_zoneImageCache;
     Gdiplus::Image* m_bgImg;
@@ -127,6 +127,25 @@ private:
     ULONGLONG m_lastWheelTick = 0;
     // 合成节流：内容未变化时（如系统重绘）跳过整帧合成，直接复用 renderDC 提交
     bool m_renderCompositeDirty = true;
+
+    // ---- 路线后台工作线程 ----
+    // 常驻线程 + 单槽任务队列：避免每次重建路线时创建/销毁线程，
+    // 也避免 std::async future 析构时阻塞等待旧任务（UI 卡顿）。
+    struct RouteTask {
+        uint64_t revision = 0;
+        std::vector<std::pair<double, double>> coords;
+        std::vector<std::string> pointIds;
+        std::set<std::string> excluded;
+        std::string startId;
+    };
+    void routeWorkerMain();
+    uint64_t m_routeRevision = 0;
+    std::mutex m_routeMutex;
+    std::condition_variable m_routeCv;
+    std::optional<RouteTask> m_routePending; // 单槽任务：新任务直接覆盖旧任务（可取消）
+    std::vector<std::pair<uint64_t, std::vector<size_t>>> m_routeResults;
+    std::thread m_routeThread;
+    bool m_routeStop = false;
 };
 
 #endif

@@ -21,8 +21,6 @@ namespace fs = std::filesystem;
 namespace {
 constexpr double ROUTE_POINT_HIT_RADIUS = 80.0;
 constexpr int ROUTE_OPTIMIZE_BUDGET_MS = 35;
-constexpr UINT_PTR kRoutePollTimerId = 1;
-constexpr UINT kRoutePollIntervalMs = 16;
 constexpr UINT_PTR kZoomQualityTimerId = 2;
 constexpr UINT kZoomQualityDelayMs = 150; // 滚轮静止 150ms 后恢复高质量插值
 using RouteCoord = std::pair<double, double>;
@@ -221,11 +219,25 @@ OverlayWindow::OverlayWindow() : m_hwnd(NULL), m_bgImg(NULL), m_currentMapId("2"
     else {
         Logger::error("GDI+ initialization failed: status={}", static_cast<int>(status));
     }
+
+    // 启动常驻路线工作线程：避免每次重建路线时创建/销毁线程，也不阻塞 UI
+    m_routeThread = std::thread(&OverlayWindow::routeWorkerMain, this);
 }
 
 OverlayWindow::~OverlayWindow() {
     Logger::info("Destroying overlay window: cached_icons={} cached_zones={} active_points={} active_zones={}",
         m_iconCache.size(), m_zoneImageCache.size(), m_points.size(), m_zones.size());
+
+    // 停止路线工作线程（先置停止标志并唤醒，再 join，避免悬挂）
+    {
+        std::lock_guard<std::mutex> lock(m_routeMutex);
+        m_routeStop = true;
+    }
+    m_routeCv.notify_all();
+    if (m_routeThread.joinable()) {
+        m_routeThread.join();
+    }
+
     releaseRenderSurface();
     if (m_bgImg) delete m_bgImg;
     for (auto& pair : m_iconCache) delete pair.second;
@@ -695,77 +707,91 @@ void OverlayWindow::rebuildRoute() {
     m_routeOrder.clear();
     if (!m_showRoute || m_points.size() < 2) return;
 
-    // 快照输入数据（后台线程只读快照，避免与主线程数据竞争）
-    std::vector<RouteCoord> coords;
-    coords.reserve(m_points.size());
-    std::vector<std::string> pointIds;
-    pointIds.reserve(m_points.size());
+    // 快照输入数据（工作线程只读快照，避免与主线程数据竞争）
+    RouteTask task;
+    task.revision = ++m_routeRevision;
+    task.coords.reserve(m_points.size());
+    task.pointIds.reserve(m_points.size());
     for (const auto& point : m_points) {
-        coords.emplace_back(point.mapX, point.mapY);
-        pointIds.push_back(point.id);
+        task.coords.emplace_back(point.mapX, point.mapY);
+        task.pointIds.push_back(point.id);
     }
-    const std::set<std::string> excluded = m_excludedPointIds;
-    const std::string startId = m_routeStartId;
-    const uint64_t revision = ++m_routeRevision;
+    task.excluded = m_excludedPointIds;
+    task.startId = m_routeStartId;
 
-    // 后台线程计算路线（最近邻 + 2-opt），避免阻塞 UI 线程；
-    // 结果携带 revision，pollRouteResult 丢弃期间被新任务取代的过期结果。
-    m_routeFuture = std::async(std::launch::async,
-        [coords = std::move(coords), pointIds = std::move(pointIds),
-         excluded = std::move(excluded), startId, revision]() {
-            std::vector<size_t> candidates;
-            candidates.reserve(coords.size());
-            size_t startIndex = (std::numeric_limits<size_t>::max)();
-            for (size_t i = 0; i < coords.size(); ++i) {
-                if (excluded.count(pointIds[i])) continue;
-                if (!startId.empty() && pointIds[i] == startId) {
-                    startIndex = i;
-                }
-                candidates.push_back(i);
-            }
+    {
+        std::lock_guard<std::mutex> lock(m_routeMutex);
+        // 单槽覆盖：新任务直接替换旧任务（旧任务即使正在计算，其结果也会因 revision 过期被丢弃）
+        m_routePending = std::move(task);
+    }
+    m_routeCv.notify_one();
+}
 
-            if (candidates.size() < 2) {
-                return std::make_pair(revision, std::vector<size_t>{});
+void OverlayWindow::routeWorkerMain() {
+    for (;;) {
+        RouteTask task;
+        {
+            std::unique_lock<std::mutex> lock(m_routeMutex);
+            m_routeCv.wait(lock, [this]() {
+                return m_routeStop || m_routePending.has_value();
+            });
+            if (m_routeStop) {
+                return;
             }
+            task = std::move(*m_routePending);
+            m_routePending.reset();
+        }
+
+        // 后台计算路线（最近邻 + 2-opt），不阻塞 UI 线程
+        std::vector<size_t> order;
+        std::vector<size_t> candidates;
+        candidates.reserve(task.coords.size());
+        size_t startIndex = (std::numeric_limits<size_t>::max)();
+        for (size_t i = 0; i < task.coords.size(); ++i) {
+            if (task.excluded.count(task.pointIds[i])) continue;
+            if (!task.startId.empty() && task.pointIds[i] == task.startId) {
+                startIndex = i;
+            }
+            candidates.push_back(i);
+        }
+
+        if (candidates.size() >= 2) {
             if (startIndex == (std::numeric_limits<size_t>::max)()) {
                 startIndex = candidates.front();
             }
+            order = BuildNearestNeighborRoute(task.coords, candidates, startIndex);
+            OptimizeRoute2Opt(task.coords, order, ROUTE_OPTIMIZE_BUDGET_MS);
+        }
 
-            std::vector<size_t> order = BuildNearestNeighborRoute(coords, candidates, startIndex);
-            OptimizeRoute2Opt(coords, order, ROUTE_OPTIMIZE_BUDGET_MS);
-            return std::make_pair(revision, std::move(order));
-        });
-
-    // 启动定时器轮询后台结果；结果就绪或任务失效后由 pollRouteResult 停止
-    if (m_hwnd) {
-        SetTimer(m_hwnd, kRoutePollTimerId, kRoutePollIntervalMs, nullptr);
+        {
+            std::lock_guard<std::mutex> lock(m_routeMutex);
+            m_routeResults.emplace_back(task.revision, std::move(order));
+        }
+        // 通知主线程收割结果
+        if (m_hwnd) {
+            PostMessageW(m_hwnd, WM_APP + 1, 0, 0);
+        }
     }
 }
 
 void OverlayWindow::pollRouteResult() {
-    if (!m_routeFuture.valid() ||
-        m_routeFuture.wait_for(std::chrono::milliseconds(0)) != std::future_status::ready) {
+    std::vector<std::pair<uint64_t, std::vector<size_t>>> results;
+    {
+        std::lock_guard<std::mutex> lock(m_routeMutex);
+        results.swap(m_routeResults);
+    }
+    if (results.empty()) {
         return;
     }
 
-    try {
-        auto [revision, order] = m_routeFuture.get();
-        m_routeFuture = std::future<std::pair<uint64_t, std::vector<size_t>>>();
+    // 只应用与当前 revision 匹配的结果；期间被更新的任务结果直接丢弃
+    for (auto& [revision, order] : results) {
         if (revision != m_routeRevision) {
-            // 过期结果：期间已有新任务启动，直接丢弃
             Logger::debug("Route result discarded: stale_revision={} current_revision={}", revision, m_routeRevision);
-            return;
+            continue;
         }
         m_routeOrder = std::move(order);
         Logger::debug("Marker route computed in background: route_points={}", m_routeOrder.size());
-    }
-    catch (const std::exception& e) {
-        Logger::error("Route computation failed: {}", e.what());
-        m_routeFuture = std::future<std::pair<uint64_t, std::vector<size_t>>>();
-    }
-    // 结果已收割，停止轮询定时器
-    if (m_hwnd) {
-        KillTimer(m_hwnd, kRoutePollTimerId);
     }
     invalidate();
 }
@@ -1052,8 +1078,6 @@ void OverlayWindow::paint(HDC hdc) {
     // 使用 32 位 ARGB DIB，避免颜色键透明破坏半透明 PNG、范围图层和抗锯齿边缘。
     (void)hdc;
     m_framePending = false;
-    // 收割后台路线计算结果（若就绪），保持 UI 不阻塞
-    pollRouteResult();
     if (!ensureRenderSurface()) {
         return;
     }
@@ -1215,13 +1239,14 @@ LRESULT CALLBACK OverlayWindow::WndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM l
     }
     if (msg == WM_NCHITTEST) return HTTRANSPARENT;
     if (msg == WM_ERASEBKGND) return 1;
-    if (msg == WM_TIMER && obj && wp == kRoutePollTimerId) {
-        obj->pollRouteResult();
-        return 0;
-    }
     if (msg == WM_TIMER && obj && wp == kZoomQualityTimerId) {
         // 滚轮静止后恢复高质量背景插值，重绘一帧
         obj->restoreZoomQuality();
+        return 0;
+    }
+    if (msg == WM_APP + 1 && obj) {
+        // 路线后台计算完成通知
+        obj->pollRouteResult();
         return 0;
     }
     if (msg == WM_DESTROY) return 0;
