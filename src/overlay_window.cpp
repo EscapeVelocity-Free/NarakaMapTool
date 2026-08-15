@@ -93,6 +93,30 @@ void OptimizeRoute2Opt(const std::vector<ScreenCoord>& coords, std::vector<size_
         }
     }
 }
+
+// GDI+ 在 32bpp DIB 上绘制时输出的是 straight (non-premultiplied) alpha，
+// 而 AlphaBlend(AC_SRC_ALPHA) 与 UpdateLayeredWindow(ULW_ALPHA) 都要求 premultiplied alpha。
+// 此函数把 32bpp ARGB 像素逐像素预乘，避免半透明内容（范围圆、区域图片、抗锯齿边缘）偏亮。
+void PremultiplyDibPixels(void* bits, int pixelCount) {
+    if (!bits || pixelCount <= 0) {
+        return;
+    }
+    auto* pixels = static_cast<unsigned char*>(bits);
+    for (int index = 0; index < pixelCount; ++index) {
+        unsigned char* p = pixels + index * 4;
+        const unsigned int alpha = p[3];
+        if (alpha == 0) {
+            p[0] = 0;
+            p[1] = 0;
+            p[2] = 0;
+        }
+        else if (alpha != 255) {
+            p[0] = static_cast<unsigned char>((p[0] * alpha + 127) / 255);
+            p[1] = static_cast<unsigned char>((p[1] * alpha + 127) / 255);
+            p[2] = static_cast<unsigned char>((p[2] * alpha + 127) / 255);
+        }
+    }
+}
 }
 
 // 图标名映射
@@ -854,51 +878,56 @@ bool OverlayWindow::renderBackgroundFrame() {
         return m_backgroundDC && m_backgroundBitmap;
     }
 
-    Graphics g(m_backgroundDC);
-    // Keep the cached layer transparent outside the map so AlphaBlend can composite it directly.
-    g.SetInterpolationMode(InterpolationModeHighQualityBilinear);
-    g.SetSmoothingMode(SmoothingModeAntiAlias);
-    g.Clear(Color(0, 0, 0, 0));
+    {
+        Graphics g(m_backgroundDC);
+        // Keep the cached layer transparent outside the map so AlphaBlend can composite it directly.
+        g.SetInterpolationMode(InterpolationModeHighQualityBilinear);
+        g.SetSmoothingMode(SmoothingModeAntiAlias);
+        g.Clear(Color(0, 0, 0, 0));
 
-    if (m_showBackground && m_bgImg && m_bgImg->GetLastStatus() == Ok) {
-        // 只从原图采样当前视口，避免最大缩放时先生成 5000+ 像素的大图再裁剪。
-        // 这条路径与游戏地图的纹理裁剪方式一致，也显著降低滚轮缩放的 CPU 开销。
-        const double mapScale = m_mapTransform.mapLengthToScreen(1.0);
-        const MapScreenPoint mapOrigin = m_mapTransform.mapToScreen(0.0, 0.0);
-        if (mapScale > 0.0) {
-            const double sourceLeft = (m_winX - mapOrigin.x) / mapScale;
-            const double sourceTop = (m_winY - mapOrigin.y) / mapScale;
-            const double sourceRight = (m_winX + m_winSize - mapOrigin.x) / mapScale;
-            const double sourceBottom = (m_winY + m_winSize - mapOrigin.y) / mapScale;
+        if (m_showBackground && m_bgImg && m_bgImg->GetLastStatus() == Ok) {
+            // 只从原图采样当前视口，避免最大缩放时先生成 5000+ 像素的大图再裁剪。
+            // 这条路径与游戏地图的纹理裁剪方式一致，也显著降低滚轮缩放的 CPU 开销。
+            const double mapScale = m_mapTransform.mapLengthToScreen(1.0);
+            const MapScreenPoint mapOrigin = m_mapTransform.mapToScreen(0.0, 0.0);
+            if (mapScale > 0.0) {
+                const double sourceLeft = (m_winX - mapOrigin.x) / mapScale;
+                const double sourceTop = (m_winY - mapOrigin.y) / mapScale;
+                const double sourceRight = (m_winX + m_winSize - mapOrigin.x) / mapScale;
+                const double sourceBottom = (m_winY + m_winSize - mapOrigin.y) / mapScale;
 
-            const double clippedLeft = (std::max)(0.0, (std::min)(
-                MapTransform::kMapCoordinateSize, sourceLeft));
-            const double clippedTop = (std::max)(0.0, (std::min)(
-                MapTransform::kMapCoordinateSize, sourceTop));
-            const double clippedRight = (std::max)(0.0, (std::min)(
-                MapTransform::kMapCoordinateSize, sourceRight));
-            const double clippedBottom = (std::max)(0.0, (std::min)(
-                MapTransform::kMapCoordinateSize, sourceBottom));
+                const double clippedLeft = (std::max)(0.0, (std::min)(
+                    MapTransform::kMapCoordinateSize, sourceLeft));
+                const double clippedTop = (std::max)(0.0, (std::min)(
+                    MapTransform::kMapCoordinateSize, sourceTop));
+                const double clippedRight = (std::max)(0.0, (std::min)(
+                    MapTransform::kMapCoordinateSize, sourceRight));
+                const double clippedBottom = (std::max)(0.0, (std::min)(
+                    MapTransform::kMapCoordinateSize, sourceBottom));
 
-            if (clippedRight > clippedLeft && clippedBottom > clippedTop) {
-                const RectF destination(
-                    static_cast<REAL>(mapOrigin.x + clippedLeft * mapScale - m_winX),
-                    static_cast<REAL>(mapOrigin.y + clippedTop * mapScale - m_winY),
-                    static_cast<REAL>((clippedRight - clippedLeft) * mapScale),
-                    static_cast<REAL>((clippedBottom - clippedTop) * mapScale));
-                g.DrawImage(
-                    m_bgImg,
-                    destination,
-                    static_cast<REAL>(clippedLeft),
-                    static_cast<REAL>(clippedTop),
-                    static_cast<REAL>(clippedRight - clippedLeft),
-                    static_cast<REAL>(clippedBottom - clippedTop),
-                    UnitPixel);
+                if (clippedRight > clippedLeft && clippedBottom > clippedTop) {
+                    const RectF destination(
+                        static_cast<REAL>(mapOrigin.x + clippedLeft * mapScale - m_winX),
+                        static_cast<REAL>(mapOrigin.y + clippedTop * mapScale - m_winY),
+                        static_cast<REAL>((clippedRight - clippedLeft) * mapScale),
+                        static_cast<REAL>((clippedBottom - clippedTop) * mapScale));
+                    g.DrawImage(
+                        m_bgImg,
+                        destination,
+                        static_cast<REAL>(clippedLeft),
+                        static_cast<REAL>(clippedTop),
+                        static_cast<REAL>(clippedRight - clippedLeft),
+                        static_cast<REAL>(clippedBottom - clippedTop),
+                        UnitPixel);
+                }
             }
         }
-    }
+    } // Graphics 析构，确保 GDI+ 输出已写入 DIB
 
     m_backgroundFrameDirty = false;
+    // GDI+ 输出 straight alpha；AlphaBlend/UpdateLayeredWindow 需要 premultiplied，
+    // 背景层绘制完成后立即预乘，避免半透明合成偏亮。
+    PremultiplyDibPixels(m_backgroundBits, m_winSize * m_winSize);
     return true;
 }
 
@@ -928,8 +957,9 @@ void OverlayWindow::paint(HDC hdc) {
                         m_backgroundDC, 0, 0, SRCCOPY);
                 }
                 else {
+                    // m_backgroundOpacity 是 0-100 的百分比，SourceConstantAlpha 需要 0-255。
                     BLENDFUNCTION backgroundBlend{
-                        AC_SRC_OVER, 0, static_cast<BYTE>(m_backgroundOpacity), AC_SRC_ALPHA};
+                        AC_SRC_OVER, 0, static_cast<BYTE>(m_backgroundOpacity * 255 / 100), AC_SRC_ALPHA};
                     AlphaBlend(memDC, 0, 0, m_winSize, m_winSize,
                         m_backgroundDC, 0, 0, m_winSize, m_winSize, backgroundBlend);
                 }
@@ -937,93 +967,99 @@ void OverlayWindow::paint(HDC hdc) {
         }
 
         if (m_overlayFrameDirty) {
-            Graphics overlayG(m_overlayDC);
-            overlayG.SetInterpolationMode(InterpolationModeHighQualityBilinear);
-            overlayG.SetSmoothingMode(SmoothingModeAntiAlias);
-            overlayG.Clear(Color(0, 0, 0, 0));
+            {
+                Graphics overlayG(m_overlayDC);
+                overlayG.SetInterpolationMode(InterpolationModeHighQualityBilinear);
+                overlayG.SetSmoothingMode(SmoothingModeAntiAlias);
+                overlayG.Clear(Color(0, 0, 0, 0));
 
-            // 2.5 绘制高资源区域（网站同款：区域图片拉伸到包围盒，位于背景与路线之间）
-            for (const auto& zone : m_zones) {
-                Image* zoneImg = GetZoneImage(zone.id);
-                const MapScreenPoint zoneCenter = m_mapTransform.mapToScreen(zone.mapX, zone.mapY);
-                const int halfW = (std::max)(1, static_cast<int>(std::lround(
-                    m_mapTransform.mapLengthToScreen(zone.halfWMap))));
-                const int halfH = (std::max)(1, static_cast<int>(std::lround(
-                    m_mapTransform.mapLengthToScreen(zone.halfHMap))));
-                const int left = static_cast<int>(std::lround(zoneCenter.x)) - m_winX - halfW;
-                const int top = static_cast<int>(std::lround(zoneCenter.y)) - m_winY - halfH;
-                if (left >= m_winSize || top >= m_winSize ||
-                    left + halfW * 2 <= 0 || top + halfH * 2 <= 0) {
-                    continue;
-                }
-                if (zoneImg) {
-                    overlayG.DrawImage(zoneImg, left, top, halfW * 2, halfH * 2);
-                }
-                else {
-                    // 图片缺失时的兜底：半透明矩形区域
-                    SolidBrush fallbackBrush(Color(48, 255, 196, 0));
-                    overlayG.FillRectangle(&fallbackBrush, left, top, halfW * 2, halfH * 2);
-                }
-            }
-
-            // 2.6 绘制范围圆（网站同款：bell 侦察钟 半径100、forbiddenSeal 奥义封印 半径50，位于路线/图标之下）
-            for (const auto& pt : m_points) {
-                if (pt.radiusMap <= 0.0) {
-                    continue;
-                }
-                const MapScreenPoint screenPoint = pointToScreen(pt);
-                const int localX = static_cast<int>(std::lround(screenPoint.x)) - m_winX;
-                const int localY = static_cast<int>(std::lround(screenPoint.y)) - m_winY;
-                const int radius = (std::max)(1, static_cast<int>(std::lround(
-                    m_mapTransform.mapLengthToScreen(pt.radiusMap))));
-                const int d = radius * 2;
-                if (localX + radius <= 0 || localY + radius <= 0 ||
-                    localX - radius >= m_winSize || localY - radius >= m_winSize) {
-                    continue;
+                // 2.5 绘制高资源区域（网站同款：区域图片拉伸到包围盒，位于背景与路线之间）
+                for (const auto& zone : m_zones) {
+                    Image* zoneImg = GetZoneImage(zone.id);
+                    const MapScreenPoint zoneCenter = m_mapTransform.mapToScreen(zone.mapX, zone.mapY);
+                    const int halfW = (std::max)(1, static_cast<int>(std::lround(
+                        m_mapTransform.mapLengthToScreen(zone.halfWMap))));
+                    const int halfH = (std::max)(1, static_cast<int>(std::lround(
+                        m_mapTransform.mapLengthToScreen(zone.halfHMap))));
+                    const int left = static_cast<int>(std::lround(zoneCenter.x)) - m_winX - halfW;
+                    const int top = static_cast<int>(std::lround(zoneCenter.y)) - m_winY - halfH;
+                    if (left >= m_winSize || top >= m_winSize ||
+                        left + halfW * 2 <= 0 || top + halfH * 2 <= 0) {
+                        continue;
+                    }
+                    if (zoneImg) {
+                        overlayG.DrawImage(zoneImg, left, top, halfW * 2, halfH * 2);
+                    }
+                    else {
+                        // 图片缺失时的兜底：半透明矩形区域
+                        SolidBrush fallbackBrush(Color(48, 255, 196, 0));
+                        overlayG.FillRectangle(&fallbackBrush, left, top, halfW * 2, halfH * 2);
+                    }
                 }
 
-                if (pt.type == "bell") {
-                    // 网站参数: color=#996600 fillColor=#cf8900 fillOpacity=0.3 opacity=0.8 weight=2
-                    SolidBrush bellFill(Color(61, 207, 137, 0));
-                    overlayG.FillEllipse(&bellFill, localX - radius, localY - radius, d, d);
-                    Pen bellPen(Color(204, 153, 102, 0), 2.0f);
-                    overlayG.DrawEllipse(&bellPen, localX - radius, localY - radius, d, d);
-                }
-                else if (pt.type == "forbiddenSeal") {
-                    // 网站参数: color=#0909aa fillColor=#0003aa fillOpacity=0.225 opacity=0.8 weight=2
-                    SolidBrush sealFill(Color(46, 0, 3, 170));
-                    overlayG.FillEllipse(&sealFill, localX - radius, localY - radius, d, d);
-                    Pen sealPen(Color(204, 9, 9, 170), 2.0f);
-                    overlayG.DrawEllipse(&sealPen, localX - radius, localY - radius, d, d);
-                }
-            }
+                // 2.6 绘制范围圆（网站同款：bell 侦察钟 半径100、forbiddenSeal 奥义封印 半径50，位于路线/图标之下）
+                for (const auto& pt : m_points) {
+                    if (pt.radiusMap <= 0.0) {
+                        continue;
+                    }
+                    const MapScreenPoint screenPoint = pointToScreen(pt);
+                    const int localX = static_cast<int>(std::lround(screenPoint.x)) - m_winX;
+                    const int localY = static_cast<int>(std::lround(screenPoint.y)) - m_winY;
+                    const int radius = (std::max)(1, static_cast<int>(std::lround(
+                        m_mapTransform.mapLengthToScreen(pt.radiusMap))));
+                    const int d = radius * 2;
+                    if (localX + radius <= 0 || localY + radius <= 0 ||
+                        localX - radius >= m_winSize || localY - radius >= m_winSize) {
+                        continue;
+                    }
 
-            drawRoute(overlayG);
+                    if (pt.type == "bell") {
+                        // 网站参数: color=#996600 fillColor=#cf8900 fillOpacity=0.3 opacity=0.8 weight=2
+                        SolidBrush bellFill(Color(61, 207, 137, 0));
+                        overlayG.FillEllipse(&bellFill, localX - radius, localY - radius, d, d);
+                        Pen bellPen(Color(204, 153, 102, 0), 2.0f);
+                        overlayG.DrawEllipse(&bellPen, localX - radius, localY - radius, d, d);
+                    }
+                    else if (pt.type == "forbiddenSeal") {
+                        // 网站参数: color=#0909aa fillColor=#0003aa fillOpacity=0.225 opacity=0.8 weight=2
+                        SolidBrush sealFill(Color(46, 0, 3, 170));
+                        overlayG.FillEllipse(&sealFill, localX - radius, localY - radius, d, d);
+                        Pen sealPen(Color(204, 9, 9, 170), 2.0f);
+                        overlayG.DrawEllipse(&sealPen, localX - radius, localY - radius, d, d);
+                    }
+                }
 
-            // 3. 绘制图标 (永远显示)
-            const int drawSize = 24;
-            for (const auto& pt : m_points) {
-                Image* icon = GetIcon(pt.type);
-                const MapScreenPoint screenPoint = pointToScreen(pt);
-                const int localX = static_cast<int>(std::lround(screenPoint.x)) - m_winX;
-                const int localY = static_cast<int>(std::lround(screenPoint.y)) - m_winY;
-                if (localX + drawSize / 2 <= 0 || localY + drawSize / 2 <= 0 ||
-                    localX - drawSize / 2 >= m_winSize || localY - drawSize / 2 >= m_winSize) {
-                    continue;
-                }
-                if (icon) {
-                    overlayG.DrawImage(icon, localX - drawSize / 2, localY - drawSize / 2, drawSize, drawSize);
-                }
-                else {
-                    SolidBrush red(Color::Red);
-                    overlayG.FillEllipse(&red, localX - 3, localY - 3, 6, 6);
-                }
-                drawRouteMarkerState(overlayG, pt, localX, localY);
-            }
+                drawRoute(overlayG);
 
-            // 4. 绘制红边框
-            Pen redPen(Color::Red, 2);
-            overlayG.DrawRectangle(&redPen, 1, 1, m_winSize - 2, m_winSize - 2);
+                // 3. 绘制图标 (永远显示)
+                const int drawSize = 24;
+                for (const auto& pt : m_points) {
+                    Image* icon = GetIcon(pt.type);
+                    const MapScreenPoint screenPoint = pointToScreen(pt);
+                    const int localX = static_cast<int>(std::lround(screenPoint.x)) - m_winX;
+                    const int localY = static_cast<int>(std::lround(screenPoint.y)) - m_winY;
+                    if (localX + drawSize / 2 <= 0 || localY + drawSize / 2 <= 0 ||
+                        localX - drawSize / 2 >= m_winSize || localY - drawSize / 2 >= m_winSize) {
+                        continue;
+                    }
+                    if (icon) {
+                        overlayG.DrawImage(icon, localX - drawSize / 2, localY - drawSize / 2, drawSize, drawSize);
+                    }
+                    else {
+                        SolidBrush red(Color::Red);
+                        overlayG.FillEllipse(&red, localX - 3, localY - 3, 6, 6);
+                    }
+                    drawRouteMarkerState(overlayG, pt, localX, localY);
+                }
+
+                // 4. 绘制红边框
+                Pen redPen(Color::Red, 2);
+                overlayG.DrawRectangle(&redPen, 1, 1, m_winSize - 2, m_winSize - 2);
+            } // Graphics 析构，确保 GDI+ 输出已写入 DIB
+
+            // GDI+ 输出 straight alpha；AlphaBlend 合成与 UpdateLayeredWindow 需要 premultiplied，
+            // overlay 层绘制完成后立即预乘。
+            PremultiplyDibPixels(m_overlayBits, m_winSize * m_winSize);
             m_overlayFrameDirty = false;
         }
 
