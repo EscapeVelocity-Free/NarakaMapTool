@@ -23,6 +23,8 @@ constexpr double ROUTE_POINT_HIT_RADIUS = 80.0;
 constexpr int ROUTE_OPTIMIZE_BUDGET_MS = 35;
 constexpr UINT_PTR kRoutePollTimerId = 1;
 constexpr UINT kRoutePollIntervalMs = 16;
+constexpr UINT_PTR kZoomQualityTimerId = 2;
+constexpr UINT kZoomQualityDelayMs = 150; // 滚轮静止 150ms 后恢复高质量插值
 using RouteCoord = std::pair<double, double>;
 
 double ScreenDistanceSq(const RouteCoord& a, const RouteCoord& b) {
@@ -579,6 +581,12 @@ void OverlayWindow::handleMouseWheel(int wheelDelta, int screenX, int screenY, b
         return;
     }
 
+    // 缩放流畅度优化：滚动期间用低质量插值重绘背景，静止后定时切回高质量。
+    m_lowQualityZoom = true;
+    m_lastWheelTick = GetTickCount64();
+    if (m_hwnd) {
+        SetTimer(m_hwnd, kZoomQualityTimerId, kZoomQualityDelayMs, nullptr);
+    }
     m_backgroundFrameDirty = true;
     invalidate();
 }
@@ -747,6 +755,22 @@ void OverlayWindow::pollRouteResult() {
     if (m_hwnd) {
         KillTimer(m_hwnd, kRoutePollTimerId);
     }
+    invalidate();
+}
+
+void OverlayWindow::restoreZoomQuality() {
+    if (m_hwnd) {
+        KillTimer(m_hwnd, kZoomQualityTimerId);
+    }
+    // 若滚动仍在进行（例如快速连续滚轮），保留低质量模式等待下一轮定时器
+    if (GetTickCount64() - m_lastWheelTick < kZoomQualityDelayMs) {
+        return;
+    }
+    if (!m_lowQualityZoom) {
+        return;
+    }
+    m_lowQualityZoom = false;
+    m_backgroundFrameDirty = true;
     invalidate();
 }
 
@@ -960,7 +984,9 @@ bool OverlayWindow::renderBackgroundFrame() {
     {
         Graphics g(m_backgroundDC);
         // Keep the cached layer transparent outside the map so AlphaBlend can composite it directly.
-        g.SetInterpolationMode(InterpolationModeHighQualityBilinear);
+        // 缩放流畅度优化：连续滚动时用低质量插值（更快），静止后由定时器切回高质量。
+        g.SetInterpolationMode(m_lowQualityZoom ? InterpolationModeNearestNeighbor
+                                                : InterpolationModeHighQualityBilinear);
         g.SetSmoothingMode(SmoothingModeAntiAlias);
         g.Clear(Color(0, 0, 0, 0));
 
@@ -1173,6 +1199,11 @@ LRESULT CALLBACK OverlayWindow::WndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM l
     if (msg == WM_ERASEBKGND) return 1;
     if (msg == WM_TIMER && obj && wp == kRoutePollTimerId) {
         obj->pollRouteResult();
+        return 0;
+    }
+    if (msg == WM_TIMER && obj && wp == kZoomQualityTimerId) {
+        // 滚轮静止后恢复高质量背景插值，重绘一帧
+        obj->restoreZoomQuality();
         return 0;
     }
     if (msg == WM_DESTROY) return 0;

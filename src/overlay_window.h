@@ -48,6 +48,7 @@ private:
     Gdiplus::Image* GetZoneImage(const std::string& zoneId);
     void rebuildRoute();
     void pollRouteResult();
+    void restoreZoomQuality();
     void drawRoute(Gdiplus::Graphics& g);
     void drawRouteMarkerState(Gdiplus::Graphics& g, const Point& pt, int localX, int localY);
     MapScreenPoint pointToScreen(const Point& point) const;
@@ -119,6 +120,9 @@ private:
     bool m_showRoute = false;
     int m_wheelRemainder = 0;
     bool m_framePending = false;
+    // 缩放流畅度优化：滚动期间用低质量插值，静止一段时间后切回高质量重绘
+    bool m_lowQualityZoom = false;
+    ULONGLONG m_lastWheelTick = 0;
 };
 
 #endif
