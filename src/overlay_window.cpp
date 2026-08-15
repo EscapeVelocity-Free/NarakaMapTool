@@ -117,6 +117,29 @@ void PremultiplyDibPixels(void* bits, int pixelCount) {
         }
     }
 }
+
+// 资源数据缓存：整个进程只解析一次 resources_naraka.json，
+// 勾选/切图/图层切换时 loadData 直接复用，避免每次全量读盘 + JSON 树构建（性能优化）。
+const nlohmann::json& CachedResourceData() {
+    static const nlohmann::json data = []() {
+        nlohmann::json parsed;
+        const fs::path dataPath = fs::u8path(ConfigManager::resourcePath) / "resources_naraka.json";
+        std::ifstream input(dataPath);
+        if (input.is_open()) {
+            try {
+                input >> parsed;
+            }
+            catch (...) {
+                Logger::error("Failed to parse resource data file: {}", dataPath.string());
+            }
+        }
+        else {
+            Logger::error("Failed to open resource data file: {}", dataPath.string());
+        }
+        return parsed;
+    }();
+    return data;
+}
 }
 
 // 图标名映射
@@ -323,16 +346,14 @@ void OverlayWindow::updateResources(const std::vector<std::string>& keys) {
 }
 
 void OverlayWindow::loadData() {
-    const fs::path dataPath = fs::u8path(ConfigManager::resourcePath) / "resources_naraka.json";
     Logger::debug("Loading resource data: map_id={} file={} active_key_count={}",
-        m_currentMapId, dataPath.string(), m_activeKeys.size());
-    std::ifstream f(dataPath);
-    if (!f.is_open()) {
-        Logger::error("Failed to open resource data file: {}", dataPath.string());
-        return;
-    }
+        m_currentMapId, "resources_naraka.json", m_activeKeys.size());
     try {
-        nlohmann::json data; f >> data;
+        // 使用进程级缓存，避免每次勾选/切图都重新读盘解析（性能优化）
+        const nlohmann::json& data = CachedResourceData();
+        if (data.empty() && !data.is_array()) {
+            return;
+        }
         m_points.clear();
         m_zones.clear();
         size_t matchingMapEntries = 0;
