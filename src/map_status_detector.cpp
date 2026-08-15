@@ -4,11 +4,45 @@
 #include "logger.h"
 
 MapStatusDetector::MapStatusDetector(QObject* parent) : QObject(parent) {
+    // 预创建采样缓冲（7x7 足够容纳检测点周边区域），复用避免每次 tick 创建/销毁
+    m_sampleDC = CreateCompatibleDC(nullptr);
+    BITMAPINFO bitmapInfo{};
+    bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bitmapInfo.bmiHeader.biWidth = 7;
+    bitmapInfo.bmiHeader.biHeight = -7; // top-down
+    bitmapInfo.bmiHeader.biPlanes = 1;
+    bitmapInfo.bmiHeader.biBitCount = 32;
+    bitmapInfo.bmiHeader.biCompression = BI_RGB;
+    m_sampleBitmap = CreateDIBSection(
+        m_sampleDC, &bitmapInfo, DIB_RGB_COLORS, &m_sampleBits, nullptr, 0);
+    if (m_sampleBitmap) {
+        m_samplePreviousBitmap = SelectObject(m_sampleDC, m_sampleBitmap);
+    }
+    else {
+        Logger::error("Failed to create map detector sample buffer.");
+    }
+
     m_timer = new QTimer(this);
     connect(m_timer, &QTimer::timeout, this, &MapStatusDetector::processTick);
     m_timer->start(30); // 每30ms检测一次
     Logger::info("Map status detector started: interval_ms=30 threshold={} detector=({}, {})",
         THRESHOLD, ConfigManager::detectorX, ConfigManager::detectorY);
+}
+
+MapStatusDetector::~MapStatusDetector() {
+    if (m_sampleDC && m_samplePreviousBitmap) {
+        SelectObject(m_sampleDC, m_samplePreviousBitmap);
+    }
+    if (m_sampleBitmap) {
+        DeleteObject(m_sampleBitmap);
+    }
+    if (m_sampleDC) {
+        DeleteDC(m_sampleDC);
+    }
+    m_sampleDC = nullptr;
+    m_sampleBitmap = nullptr;
+    m_samplePreviousBitmap = nullptr;
+    m_sampleBits = nullptr;
 }
 
 void MapStatusDetector::processTick() {
@@ -78,21 +112,40 @@ void MapStatusDetector::clearRouteKeyStates() {
 }
 
 bool MapStatusDetector::isPixelAreaWhite(int radius) {
-    HDC hdc = GetDC(NULL);
-    bool allWhite = true;
+    // 性能优化：一次 BitBlt 把检测点周边 (2*radius+1)^2 区域拷入内存 DIB，
+    // 再从内存读取像素，替代 25 次跨 GDI 的 GetPixel 调用。
+    if (!m_sampleDC || !m_sampleBitmap) {
+        return false;
+    }
 
-    for (int dx = -radius; dx <= radius; ++dx) {
-        for (int dy = -radius; dy <= radius; ++dy) {
-            if (std::sqrt(dx * dx + dy * dy) <= radius) {
-                COLORREF color = GetPixel(hdc, ConfigManager::detectorX + dx, ConfigManager::detectorY + dy);
-                if (GetRValue(color) != 255 || GetGValue(color) != 255 || GetBValue(color) != 255) {
-                    allWhite = false;
-                    break;
-                }
+    const int size = radius * 2 + 1;
+    const int originX = ConfigManager::detectorX - radius;
+    const int originY = ConfigManager::detectorY - radius;
+
+    HDC screenDC = GetDC(NULL);
+    if (!screenDC) {
+        return false;
+    }
+    const BOOL copied = BitBlt(m_sampleDC, 0, 0, size, size, screenDC, originX, originY, SRCCOPY);
+    ReleaseDC(NULL, screenDC);
+    if (!copied || !m_sampleBits) {
+        return false;
+    }
+
+    const auto* pixels = static_cast<const unsigned char*>(m_sampleBits);
+    for (int dy = 0; dy < size; ++dy) {
+        for (int dx = 0; dx < size; ++dx) {
+            // 圆内采样（与原逻辑一致，略去超出圆半径的角点）
+            const int relX = dx - radius;
+            const int relY = dy - radius;
+            if (std::sqrt(static_cast<double>(relX * relX + relY * relY)) > radius) {
+                continue;
+            }
+            const unsigned char* p = pixels + (dy * size + dx) * 4;
+            if (p[2] != 255 || p[1] != 255 || p[0] != 255) { // BGRA 布局
+                return false;
             }
         }
-        if (!allWhite) break;
     }
-    ReleaseDC(NULL, hdc);
-    return allWhite;
+    return true;
 }

@@ -10,6 +10,7 @@ class MapStatusDetector : public QObject {
     Q_OBJECT
 public:
     explicit MapStatusDetector(QObject* parent = nullptr);
+    ~MapStatusDetector() override;
 
 signals:
     void mapVisibilityChanged(bool visible); // 地图打开/关闭信号
@@ -34,6 +35,12 @@ private:
     bool m_routeStartWasPressed = false;
     bool m_routeExcludeWasPressed = false;
     bool m_routeResetWasPressed = false;
+
+    // 采样缓冲：一次 BitBlt 拷贝检测区域，替代逐像素 GetPixel（性能优化）
+    HDC m_sampleDC = nullptr;
+    HBITMAP m_sampleBitmap = nullptr;
+    HGDIOBJ m_samplePreviousBitmap = nullptr;
+    void* m_sampleBits = nullptr;
 
     int m_whiteCount = 0;
     int m_blackCount = 0;
