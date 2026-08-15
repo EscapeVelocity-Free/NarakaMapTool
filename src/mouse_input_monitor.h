@@ -1,4 +1,4 @@
-#ifndef MOUSE_INPUT_MONITOR_H
+﻿#ifndef MOUSE_INPUT_MONITOR_H
 #define MOUSE_INPUT_MONITOR_H
 
 #include <QObject>
@@ -43,6 +43,9 @@ private:
     std::atomic<size_t> m_wheelWriteIndex{0};
     std::atomic<size_t> m_wheelReadIndex{0};
     std::atomic<uint64_t> m_droppedWheelEvents{0};
+    // 唤醒协调：生产者入队后置位并排队 start；消费者清空后先复位再复查队列，
+    // 保证"停止定时器"与"新事件入队"交错时不会丢失唤醒（性能优化）。
+    std::atomic<bool> m_wakePending{false};
     std::atomic<bool> m_running{false};
     std::atomic<bool> m_stopRequested{false};
     std::thread m_hookThread;

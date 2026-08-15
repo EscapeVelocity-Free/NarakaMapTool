@@ -130,13 +130,12 @@ bool MouseInputMonitor::enqueueWheel(const WheelEvent& event) {
         return false;
     }
 
-    const bool wasEmpty = writeIndex == readIndex;
     m_wheelQueue[writeIndex % kWheelQueueCapacity] = event;
     m_wheelWriteIndex.store(writeIndex + 1, std::memory_order_release);
 
-    // 性能优化：队列从空变为非空时，唤醒主线程定时器处理事件；
-    // 队列为空时 flushWheel 会停掉定时器，避免无滚轮事件时每 2ms 空转。
-    if (wasEmpty) {
+    // 唤醒协调（防丢失）：exchange(true) 返回 false 表示此前没有待处理的唤醒请求，
+    // 此时才排队 start；若已有唤醒在途则无需重复排队，由消费者端复查兜底。
+    if (!m_wakePending.exchange(true, std::memory_order_acq_rel)) {
         QMetaObject::invokeMethod(this, [this]() {
             if (m_running.load(std::memory_order_acquire)) {
                 m_flushTimer.start();
@@ -160,10 +159,25 @@ void MouseInputMonitor::flushWheel() {
     }
     m_wheelReadIndex.store(readIndex, std::memory_order_release);
 
-    // 队列已清空（重新读取最新写入索引，避免 flush 期间新入队事件被漏掉）：
-    // 停掉定时器，等待下一次滚轮事件再唤醒。
-    if (readIndex == m_wheelWriteIndex.load(std::memory_order_acquire)) {
-        m_flushTimer.stop();
+    // 清空唤醒标志后复查：若生产者在复位窗口内入队，其 exchange 会看到 false 并排队 start；
+    // 若复查发现队列非空，说明有事件在检查间隙到达，保持定时器运行。
+    m_wakePending.store(false, std::memory_order_release);
+    if (readIndex != m_wheelWriteIndex.load(std::memory_order_acquire)) {
+        return; // 有新事件，定时器保持运行，下一轮处理
+    }
+
+    // 真正空队列：停掉定时器，等待下一次滚轮事件再唤醒
+    m_flushTimer.stop();
+    // 停止后再次复查：极端交错下生产者可能刚入队但唤醒尚未排队，
+    // 此时补一次唤醒，避免事件滞留。
+    if (readIndex != m_wheelWriteIndex.load(std::memory_order_acquire)) {
+        if (!m_wakePending.exchange(true, std::memory_order_acq_rel)) {
+            QMetaObject::invokeMethod(this, [this]() {
+                if (m_running.load(std::memory_order_acquire)) {
+                    m_flushTimer.start();
+                }
+            }, Qt::QueuedConnection);
+        }
     }
 
     const uint64_t dropped = m_droppedWheelEvents.exchange(0, std::memory_order_relaxed);
