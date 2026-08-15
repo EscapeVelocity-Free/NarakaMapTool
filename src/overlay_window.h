@@ -7,6 +7,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <future>
 #include "nlohmann/json.hpp"
 #include "map_transform.h"
 
@@ -46,6 +47,7 @@ private:
     Gdiplus::Image* GetIcon(std::string type);
     Gdiplus::Image* GetZoneImage(const std::string& zoneId);
     void rebuildRoute();
+    void pollRouteResult();
     void drawRoute(Gdiplus::Graphics& g);
     void drawRouteMarkerState(Gdiplus::Graphics& g, const Point& pt, int localX, int localY);
     MapScreenPoint pointToScreen(const Point& point) const;
@@ -84,6 +86,9 @@ private:
     std::vector<size_t> m_routeOrder;
     std::set<std::string> m_excludedPointIds;
     std::string m_routeStartId;
+    // 路线后台计算：future 持有计算任务，m_routeRevision 用于丢弃过期结果
+    std::future<std::pair<uint64_t, std::vector<size_t>>> m_routeFuture;
+    uint64_t m_routeRevision = 0;
     std::map<std::string, Gdiplus::Image*> m_iconCache;
     std::map<std::string, Gdiplus::Image*> m_zoneImageCache;
     Gdiplus::Image* m_bgImg;

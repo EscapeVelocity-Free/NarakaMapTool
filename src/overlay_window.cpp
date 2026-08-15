@@ -20,19 +20,21 @@ namespace fs = std::filesystem;
 namespace {
 constexpr double ROUTE_POINT_HIT_RADIUS = 80.0;
 constexpr int ROUTE_OPTIMIZE_BUDGET_MS = 35;
-using ScreenCoord = std::pair<int, int>;
+constexpr UINT_PTR kRoutePollTimerId = 1;
+constexpr UINT kRoutePollIntervalMs = 16;
+using RouteCoord = std::pair<double, double>;
 
-double ScreenDistanceSq(const ScreenCoord& a, const ScreenCoord& b) {
-    double dx = static_cast<double>(a.first - b.first);
-    double dy = static_cast<double>(a.second - b.second);
+double ScreenDistanceSq(const RouteCoord& a, const RouteCoord& b) {
+    const double dx = a.first - b.first;
+    const double dy = a.second - b.second;
     return dx * dx + dy * dy;
 }
 
-double RouteEdgeLength(const std::vector<ScreenCoord>& coords, const std::vector<size_t>& order, size_t left, size_t right) {
+double RouteEdgeLength(const std::vector<RouteCoord>& coords, const std::vector<size_t>& order, size_t left, size_t right) {
     return std::sqrt(ScreenDistanceSq(coords[order[left]], coords[order[right]]));
 }
 
-std::vector<size_t> BuildNearestNeighborRoute(const std::vector<ScreenCoord>& coords, const std::vector<size_t>& candidates, size_t startPointIndex) {
+std::vector<size_t> BuildNearestNeighborRoute(const std::vector<RouteCoord>& coords, const std::vector<size_t>& candidates, size_t startPointIndex) {
     if (candidates.empty()) return {};
 
     std::vector<size_t> route;
@@ -68,7 +70,7 @@ std::vector<size_t> BuildNearestNeighborRoute(const std::vector<ScreenCoord>& co
     return route;
 }
 
-void OptimizeRoute2Opt(const std::vector<ScreenCoord>& coords, std::vector<size_t>& route, int budgetMs) {
+void OptimizeRoute2Opt(const std::vector<RouteCoord>& coords, std::vector<size_t>& route, int budgetMs) {
     if (route.size() < 4) return;
 
     auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(budgetMs);
@@ -659,37 +661,79 @@ void OverlayWindow::rebuildRoute() {
     m_routeOrder.clear();
     if (!m_showRoute || m_points.size() < 2) return;
 
-    std::vector<ScreenCoord> coords;
+    // 快照输入数据（后台线程只读快照，避免与主线程数据竞争）
+    std::vector<RouteCoord> coords;
     coords.reserve(m_points.size());
+    std::vector<std::string> pointIds;
+    pointIds.reserve(m_points.size());
     for (const auto& point : m_points) {
-        const MapScreenPoint screenPoint = pointToScreen(point);
-        coords.emplace_back(
-            static_cast<int>(std::lround(screenPoint.x)),
-            static_cast<int>(std::lround(screenPoint.y)));
+        coords.emplace_back(point.mapX, point.mapY);
+        pointIds.push_back(point.id);
+    }
+    const std::set<std::string> excluded = m_excludedPointIds;
+    const std::string startId = m_routeStartId;
+    const uint64_t revision = ++m_routeRevision;
+
+    // 后台线程计算路线（最近邻 + 2-opt），避免阻塞 UI 线程；
+    // 结果携带 revision，pollRouteResult 丢弃期间被新任务取代的过期结果。
+    m_routeFuture = std::async(std::launch::async,
+        [coords = std::move(coords), pointIds = std::move(pointIds),
+         excluded = std::move(excluded), startId, revision]() {
+            std::vector<size_t> candidates;
+            candidates.reserve(coords.size());
+            size_t startIndex = (std::numeric_limits<size_t>::max)();
+            for (size_t i = 0; i < coords.size(); ++i) {
+                if (excluded.count(pointIds[i])) continue;
+                if (!startId.empty() && pointIds[i] == startId) {
+                    startIndex = i;
+                }
+                candidates.push_back(i);
+            }
+
+            if (candidates.size() < 2) {
+                return std::make_pair(revision, std::vector<size_t>{});
+            }
+            if (startIndex == (std::numeric_limits<size_t>::max)()) {
+                startIndex = candidates.front();
+            }
+
+            std::vector<size_t> order = BuildNearestNeighborRoute(coords, candidates, startIndex);
+            OptimizeRoute2Opt(coords, order, ROUTE_OPTIMIZE_BUDGET_MS);
+            return std::make_pair(revision, std::move(order));
+        });
+
+    // 启动定时器轮询后台结果；结果就绪或任务失效后由 pollRouteResult 停止
+    if (m_hwnd) {
+        SetTimer(m_hwnd, kRoutePollTimerId, kRoutePollIntervalMs, nullptr);
+    }
+}
+
+void OverlayWindow::pollRouteResult() {
+    if (!m_routeFuture.valid() ||
+        m_routeFuture.wait_for(std::chrono::milliseconds(0)) != std::future_status::ready) {
+        return;
     }
 
-    std::vector<size_t> candidates;
-    candidates.reserve(m_points.size());
-    size_t startIndex = (std::numeric_limits<size_t>::max)();
-
-    for (size_t i = 0; i < m_points.size(); ++i) {
-        const auto& point = m_points[i];
-        if (m_excludedPointIds.count(point.id)) continue;
-        if (!m_routeStartId.empty() && point.id == m_routeStartId) {
-            startIndex = i;
+    try {
+        auto [revision, order] = m_routeFuture.get();
+        m_routeFuture = std::future<std::pair<uint64_t, std::vector<size_t>>>();
+        if (revision != m_routeRevision) {
+            // 过期结果：期间已有新任务启动，直接丢弃
+            Logger::debug("Route result discarded: stale_revision={} current_revision={}", revision, m_routeRevision);
+            return;
         }
-        candidates.push_back(i);
+        m_routeOrder = std::move(order);
+        Logger::debug("Marker route computed in background: route_points={}", m_routeOrder.size());
     }
-
-    if (candidates.size() < 2) return;
-    if (startIndex == (std::numeric_limits<size_t>::max)()) {
-        startIndex = candidates.front();
+    catch (const std::exception& e) {
+        Logger::error("Route computation failed: {}", e.what());
+        m_routeFuture = std::future<std::pair<uint64_t, std::vector<size_t>>>();
     }
-
-    m_routeOrder = BuildNearestNeighborRoute(coords, candidates, startIndex);
-    OptimizeRoute2Opt(coords, m_routeOrder, ROUTE_OPTIMIZE_BUDGET_MS);
-    Logger::debug("Marker route rebuilt: candidates={} excluded_points={} start_id={} route_points={} optimize_budget_ms={}",
-        candidates.size(), m_excludedPointIds.size(), m_routeStartId, m_routeOrder.size(), ROUTE_OPTIMIZE_BUDGET_MS);
+    // 结果已收割，停止轮询定时器
+    if (m_hwnd) {
+        KillTimer(m_hwnd, kRoutePollTimerId);
+    }
+    invalidate();
 }
 
 void OverlayWindow::drawRoute(Graphics& g) {
@@ -956,6 +1000,8 @@ void OverlayWindow::paint(HDC hdc) {
     // 使用 32 位 ARGB DIB，避免颜色键透明破坏半透明 PNG、范围图层和抗锯齿边缘。
     (void)hdc;
     m_framePending = false;
+    // 收割后台路线计算结果（若就绪），保持 UI 不阻塞
+    pollRouteResult();
     if (!ensureRenderSurface()) {
         return;
     }
@@ -1111,6 +1157,10 @@ LRESULT CALLBACK OverlayWindow::WndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM l
     }
     if (msg == WM_NCHITTEST) return HTTRANSPARENT;
     if (msg == WM_ERASEBKGND) return 1;
+    if (msg == WM_TIMER && obj && wp == kRoutePollTimerId) {
+        obj->pollRouteResult();
+        return 0;
+    }
     if (msg == WM_DESTROY) return 0;
     return DefWindowProc(hWnd, msg, wp, lp);
 }
