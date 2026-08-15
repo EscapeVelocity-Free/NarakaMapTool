@@ -4,6 +4,7 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
+#include <chrono>
 #include <vector>
 #include <memory>
 #include <utility>
@@ -32,7 +33,10 @@ public:
 
             spdlog::set_default_logger(logger);
             spdlog::set_level(spdlog::level::trace);
-            spdlog::flush_on(spdlog::level::info);
+            // 性能：只在 warn 及以上立即刷盘，避免每条 info 都触发磁盘 fsync 拖慢主线程；
+            // 普通日志由后台周期性 flush_every 兜底。
+            spdlog::flush_on(spdlog::level::warn);
+            spdlog::flush_every(std::chrono::seconds(2));
 
             spdlog::info("Logger initialized successfully.");
         }
