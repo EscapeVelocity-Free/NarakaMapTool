@@ -123,6 +123,8 @@ private:
     // 缩放流畅度优化：滚动期间用低质量插值，静止一段时间后切回高质量重绘
     bool m_lowQualityZoom = false;
     ULONGLONG m_lastWheelTick = 0;
+    // 合成节流：内容未变化时（如系统重绘）跳过整帧合成，直接复用 renderDC 提交
+    bool m_renderCompositeDirty = true;
 };
 
 #endif

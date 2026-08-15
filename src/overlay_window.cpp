@@ -1048,13 +1048,14 @@ void OverlayWindow::paint(HDC hdc) {
 
     HDC memDC = m_renderDC;
 
-    {
-        Graphics g(memDC);
-        // Bilinear filtering keeps wheel-driven redraws responsive while preserving smooth map edges.
-        g.SetInterpolationMode(InterpolationModeHighQualityBilinear);
-        g.SetSmoothingMode(SmoothingModeAntiAlias);
-        g.Clear(Color(0, 0, 0, 0));
-    }
+    if (m_renderCompositeDirty) {
+        {
+            Graphics g(memDC);
+            // Bilinear filtering keeps wheel-driven redraws responsive while preserving smooth map edges.
+            g.SetInterpolationMode(InterpolationModeHighQualityBilinear);
+            g.SetSmoothingMode(SmoothingModeAntiAlias);
+            g.Clear(Color(0, 0, 0, 0));
+        }
 
         // 1. 根据开关决定是否绘制地图
         if (m_showBackground && m_bgImg && m_bgImg->GetLastStatus() == Ok) {
@@ -1174,15 +1175,19 @@ void OverlayWindow::paint(HDC hdc) {
         AlphaBlend(memDC, 0, 0, m_winSize, m_winSize,
             m_overlayDC, 0, 0, m_winSize, m_winSize, overlayBlend);
 
-        POINT dstPos{m_winX, m_winY};
-        SIZE windowSize{m_winSize, m_winSize};
-        POINT srcPos{0, 0};
-        BLENDFUNCTION blend{AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
-        if (!UpdateLayeredWindow(
-                m_hwnd, nullptr, &dstPos, &windowSize, memDC, &srcPos,
-                0, &blend, ULW_ALPHA)) {
-            Logger::error("Failed to update layered window. error={}", GetLastError());
-        }
+        // 本帧合成完成
+        m_renderCompositeDirty = false;
+    }
+
+    POINT dstPos{m_winX, m_winY};
+    SIZE windowSize{m_winSize, m_winSize};
+    POINT srcPos{0, 0};
+    BLENDFUNCTION blend{AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
+    if (!UpdateLayeredWindow(
+            m_hwnd, nullptr, &dstPos, &windowSize, memDC, &srcPos,
+            0, &blend, ULW_ALPHA)) {
+        Logger::error("Failed to update layered window. error={}", GetLastError());
+    }
 
 }
 
@@ -1297,6 +1302,9 @@ void OverlayWindow::invalidate(bool contentDirty) {
     if (contentDirty) {
         m_overlayFrameDirty = true;
     }
+    // 任何重绘请求都需要重新合成 renderDC（背景开关/透明度/内容变化），
+    // 系统重绘（无 invalidate 调用）则跳过合成直接复用 renderDC。
+    m_renderCompositeDirty = true;
     if (m_hwnd && !m_framePending) {
         m_framePending = true;
         InvalidateRect(m_hwnd, nullptr, FALSE);
