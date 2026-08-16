@@ -126,7 +126,11 @@ int main(int argc, char* argv[]) {
     QObject::connect(&panel, &ControlPanel::toggleAlwaysVisible, [&](bool enabled) {
         Logger::info("Main bridge received always-visible update: enabled={}", enabled);
         overlay.setAlwaysVisible(enabled);
-        });
+    });
+    QObject::connect(&panel, &ControlPanel::toggleBorder, [&](bool enabled) {
+        Logger::info("Main bridge received border visibility update: enabled={}", enabled);
+        overlay.setShowBorder(enabled);
+    });
     mouseInputMonitor.start();
     Logger::info("All UI, detector, and overlay signal connections established. Entering event loop.");
     return a.exec(); // 开启 Qt 标准事件循环

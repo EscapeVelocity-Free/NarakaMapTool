@@ -34,6 +34,7 @@ signals:
     void backgroundOpacityChanged(int opacityPercent);
     void toggleMapZoom(bool enabled);
     void toggleAlwaysVisible(bool enabled);
+    void toggleBorder(bool enabled);
 
 private:
     struct ResourceItem;
@@ -60,7 +61,7 @@ private:
     void applyCardShadow(QFrame* card);
     void connectActions(QPushButton* selectAllButton, QPushButton* clearAllButton,
         QCheckBox* showBackgroundBox, QSlider* backgroundOpacitySlider, QLabel* opacityValueLabel,
-        QCheckBox* allowMapZoomBox, QCheckBox* alwaysVisibleBox);
+        QCheckBox* allowMapZoomBox, QCheckBox* alwaysVisibleBox, QCheckBox* showBorderBox);
     bool isStormchantMapSelected() const;
     bool isResourceAvailable(const ResourceBinding& binding) const;
     int currentLayer() const;
@@ -83,6 +84,7 @@ private:
     QLabel* m_opacityValueLabel = nullptr;
     QCheckBox* m_allowMapZoomBox = nullptr;
     QCheckBox* m_alwaysVisibleBox = nullptr;
+    QCheckBox* m_showBorderBox = nullptr;
     QPushButton* m_selectAllButton = nullptr;
     QPushButton* m_clearAllButton = nullptr;
 };

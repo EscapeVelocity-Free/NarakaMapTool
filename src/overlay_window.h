@@ -41,6 +41,7 @@ public:
     void setBackgroundOpacity(int opacityPercent);
     void setMapZoomEnabled(bool enabled);
     void setAlwaysVisible(bool enabled);
+    void setShowBorder(bool show);
 private:
     struct Point;
 
@@ -122,6 +123,7 @@ private:
     bool m_mapZoomEnabled = false; // 默认不允许手动缩放
     bool m_mapDetectedVisible = false; // 默认等待游戏地图检测结果
     bool m_alwaysVisible = false; // 默认跟随游戏地图显示状态
+    bool m_showBorder = true; // 默认显示红色边框，保持原有行为
     bool m_showRoute = false;
     int m_wheelRemainder = 0;
     bool m_framePending = false;

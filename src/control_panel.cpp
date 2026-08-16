@@ -218,7 +218,8 @@ ControlPanel::ControlPanel(QWidget* parent)
     rootLayout->addLayout(bodyLayout, 1);
 
     connectActions(m_selectAllButton, m_clearAllButton, m_showBackgroundBox,
-        m_backgroundOpacitySlider, m_opacityValueLabel, m_allowMapZoomBox, m_alwaysVisibleBox);
+        m_backgroundOpacitySlider, m_opacityValueLabel, m_allowMapZoomBox, m_alwaysVisibleBox,
+        m_showBorderBox);
     updateLayerSelectorVisibility();
     refreshResourceVisibility();
     QTimer::singleShot(100, this, &ControlPanel::notifySelectionChanged);
@@ -733,6 +734,10 @@ QFrame* ControlPanel::createControlSidebar() {
     m_alwaysVisibleBox->setChecked(false);
     m_alwaysVisibleBox->setToolTip(QString::fromUtf8("开启后不受游戏地图展开状态影响，始终显示透明图标地图"));
 
+    m_showBorderBox = addSwitchRow(QString::fromUtf8("显示边框"));
+    m_showBorderBox->setChecked(true);
+    m_showBorderBox->setToolTip(QString::fromUtf8("显示或隐藏透明地图边缘的红色定位边框"));
+
     layout->addSpacing(8);
     auto* footerDivider = new QFrame(sidebar);
     footerDivider->setObjectName("sidebarDivider");
@@ -883,7 +888,7 @@ void ControlPanel::applyCardShadow(QFrame* card) {
 
 void ControlPanel::connectActions(QPushButton* selectAllButton, QPushButton* clearAllButton,
     QCheckBox* showBackgroundBox, QSlider* backgroundOpacitySlider, QLabel* opacityValueLabel,
-    QCheckBox* allowMapZoomBox, QCheckBox* alwaysVisibleBox) {
+    QCheckBox* allowMapZoomBox, QCheckBox* alwaysVisibleBox, QCheckBox* showBorderBox) {
     connect(showBackgroundBox, &QCheckBox::stateChanged, [this](int state) {
         if (m_backgroundOpacitySlider) {
             m_backgroundOpacitySlider->setEnabled(state == Qt::Checked);
@@ -905,6 +910,11 @@ void ControlPanel::connectActions(QPushButton* selectAllButton, QPushButton* cle
     connect(alwaysVisibleBox, &QCheckBox::toggled, [this](bool enabled) {
         Logger::info("Control panel always-visible switch changed: enabled={}", enabled);
         emit toggleAlwaysVisible(enabled);
+    });
+
+    connect(showBorderBox, &QCheckBox::toggled, [this](bool enabled) {
+        Logger::info("Control panel border switch changed: enabled={}", enabled);
+        emit toggleBorder(enabled);
     });
 
     connect(m_mapCombo, &QComboBox::currentIndexChanged, [this](int) {

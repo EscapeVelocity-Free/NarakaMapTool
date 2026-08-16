@@ -1275,8 +1275,10 @@ void OverlayWindow::paint(HDC hdc) {
                 }
 
                 // 4. 绘制红边框
-                Pen redPen(Color::Red, 2);
-                overlayG.DrawRectangle(&redPen, 1, 1, m_winSize - 2, m_winSize - 2);
+                if (m_showBorder) {
+                    Pen redPen(Color::Red, 2);
+                    overlayG.DrawRectangle(&redPen, 1, 1, m_winSize - 2, m_winSize - 2);
+                }
             } // Graphics 析构，确保 GDI+ 输出已写入 DIB
 
             // GDI+ 输出 straight alpha；AlphaBlend 合成与 UpdateLayeredWindow 需要 premultiplied，
@@ -1361,6 +1363,17 @@ void OverlayWindow::setAlwaysVisible(bool enabled) {
         m_alwaysVisible, enabled, m_mapDetectedVisible);
     m_alwaysVisible = enabled;
     updateVisibility();
+}
+
+void OverlayWindow::setShowBorder(bool show) {
+    if (m_showBorder == show) {
+        return;
+    }
+
+    Logger::info("Overlay border visibility changed: previous={} current={} map_id={}",
+        m_showBorder, show, m_currentMapId);
+    m_showBorder = show;
+    invalidate();
 }
 
 void OverlayWindow::updateVisibility() {
