@@ -18,6 +18,7 @@ set(SOURCES
     src/config_manager.cpp
     src/resource_catalog.cpp
     src/map_transform.cpp
+    src/map_tile_background.cpp
     src/mouse_input_monitor.cpp
 )
 

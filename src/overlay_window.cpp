@@ -220,6 +220,10 @@ OverlayWindow::OverlayWindow() : m_hwnd(NULL), m_bgImg(NULL), m_currentMapId("2"
         Logger::error("GDI+ initialization failed: status={}", static_cast<int>(status));
     }
 
+    // Start tile decoding only after GDI+ has been initialized. The worker is
+    // idle until a map background requests its first visible tile.
+    m_tileBackground.start();
+
     // 启动常驻路线工作线程：避免每次重建路线时创建/销毁线程，也不阻塞 UI
     m_routeThread = std::thread(&OverlayWindow::routeWorkerMain, this);
 }
@@ -237,6 +241,10 @@ OverlayWindow::~OverlayWindow() {
     if (m_routeThread.joinable()) {
         m_routeThread.join();
     }
+
+    m_tileBackground.setNotifyWindow(nullptr);
+    m_tileBackground.stop();
+    m_tileBackground.clearCache();
 
     releaseRenderSurface();
     if (m_bgImg) delete m_bgImg;
@@ -296,6 +304,7 @@ void OverlayWindow::setMapLayer(int layer) {
 
 void OverlayWindow::loadMapBackground() {
     m_backgroundFrameDirty = true;
+    m_tileBackground.setMap(m_currentMapId, m_currentLayer);
     if (m_bgImg) {
         delete m_bgImg;
         m_bgImg = nullptr;
@@ -367,6 +376,8 @@ void OverlayWindow::init(HINSTANCE hInst) {
     else {
         Logger::error("Overlay window creation failed: last_error={}", static_cast<unsigned long>(GetLastError()));
     }
+    m_tileBackground.setNotifyWindow(m_hwnd);
+    m_tileBackground.setRootPath(fs::u8path(ConfigManager::mapImagePath));
     // 不再使用颜色键透明，避免半透明 PNG 和抗锯齿像素被错误抠成黑白块。
     ShowWindow(m_hwnd, SW_SHOW);
 }
@@ -1028,7 +1039,7 @@ bool OverlayWindow::renderBackgroundFrame() {
         g.SetSmoothingMode(SmoothingModeAntiAlias);
         g.Clear(Color(0, 0, 0, 0));
 
-        if (m_showBackground && m_bgImg && m_bgImg->GetLastStatus() == Ok) {
+        if (m_showBackground) {
             // 只从原图采样当前视口，避免最大缩放时先生成 5000+ 像素的大图再裁剪。
             // 这条路径与游戏地图的纹理裁剪方式一致，也显著降低滚轮缩放的 CPU 开销。
             const double mapScale = m_mapTransform.mapLengthToScreen(1.0);
@@ -1048,7 +1059,8 @@ bool OverlayWindow::renderBackgroundFrame() {
                 const double clippedBottom = (std::max)(0.0, (std::min)(
                     MapTransform::kMapCoordinateSize, sourceBottom));
 
-                if (clippedRight > clippedLeft && clippedBottom > clippedTop) {
+                if (clippedRight > clippedLeft && clippedBottom > clippedTop &&
+                    m_bgImg && m_bgImg->GetLastStatus() == Ok) {
                     const RectF destination(
                         static_cast<REAL>(mapOrigin.x + clippedLeft * mapScale - m_winX),
                         static_cast<REAL>(mapOrigin.y + clippedTop * mapScale - m_winY),
@@ -1062,6 +1074,70 @@ bool OverlayWindow::renderBackgroundFrame() {
                         static_cast<REAL>(clippedRight - clippedLeft),
                         static_cast<REAL>(clippedBottom - clippedTop),
                         UnitPixel);
+                }
+
+                const int tileZoom = m_tileBackground.preferredZoom(
+                    MapTransform::kMapCoordinateSize * mapScale);
+                if (tileZoom >= 0 && clippedRight > clippedLeft && clippedBottom > clippedTop) {
+                    const int tileCount = 1 << tileZoom;
+                    const double mapUnitsPerTile = MapTransform::kMapCoordinateSize / tileCount;
+                    const int firstTileX = (std::max)(0, static_cast<int>(std::floor(
+                        clippedLeft / mapUnitsPerTile)) - 1);
+                    const int lastTileX = (std::min)(tileCount - 1, static_cast<int>(std::floor(
+                        clippedRight / mapUnitsPerTile)) + 1);
+                    const int firstTileY = (std::max)(0, static_cast<int>(std::floor(
+                        clippedTop / mapUnitsPerTile)) - 1);
+                    const int lastTileY = (std::min)(tileCount - 1, static_cast<int>(std::floor(
+                        clippedBottom / mapUnitsPerTile)) + 1);
+
+                    m_tileBackground.beginViewportRequest(
+                        tileZoom, firstTileX, lastTileX, firstTileY, lastTileY);
+                    for (int tileY = firstTileY; tileY <= lastTileY; ++tileY) {
+                        for (int tileX = firstTileX; tileX <= lastTileX; ++tileX) {
+                            m_tileBackground.request(MapTileBackground::TileKey{
+                                tileZoom, tileX, tileY});
+                        }
+                    }
+
+                    // Draw loaded high-resolution tiles over the low-resolution
+                    // fallback. Missing tiles remain covered by the base image,
+                    // so asynchronous loading never produces transparent holes.
+                    for (int tileY = firstTileY; tileY <= lastTileY; ++tileY) {
+                        for (int tileX = firstTileX; tileX <= lastTileX; ++tileX) {
+                            const MapTileBackground::TileKey requested{
+                                tileZoom, tileX, tileY};
+                            MapTileBackground::TileKey sourceKey = requested;
+                            MapTileBackground::TileImage tile = m_tileBackground.find(sourceKey);
+
+                            while (!tile && sourceKey.zoom > 0) {
+                                --sourceKey.zoom;
+                                sourceKey.x /= 2;
+                                sourceKey.y /= 2;
+                                tile = m_tileBackground.find(sourceKey);
+                            }
+                            if (!tile) {
+                                continue;
+                            }
+
+                            const int zoomDelta = requested.zoom - sourceKey.zoom;
+                            const int sourceScale = 1 << zoomDelta;
+                            const int localTileX = requested.x - sourceKey.x * sourceScale;
+                            const int localTileY = requested.y - sourceKey.y * sourceScale;
+                            const RectF destination(
+                                static_cast<REAL>(mapOrigin.x + requested.x * mapUnitsPerTile * mapScale - m_winX),
+                                static_cast<REAL>(mapOrigin.y + requested.y * mapUnitsPerTile * mapScale - m_winY),
+                                static_cast<REAL>(mapUnitsPerTile * mapScale),
+                                static_cast<REAL>(mapUnitsPerTile * mapScale));
+                            g.DrawImage(
+                                tile.get(),
+                                destination,
+                                static_cast<REAL>(localTileX * MapTileBackground::kTileSize / sourceScale),
+                                static_cast<REAL>(localTileY * MapTileBackground::kTileSize / sourceScale),
+                                static_cast<REAL>(MapTileBackground::kTileSize / sourceScale),
+                                static_cast<REAL>(MapTileBackground::kTileSize / sourceScale),
+                                UnitPixel);
+                        }
+                    }
                 }
             }
         }
@@ -1094,7 +1170,8 @@ void OverlayWindow::paint(HDC hdc) {
         }
 
         // 1. 根据开关决定是否绘制地图
-        if (m_showBackground && m_bgImg && m_bgImg->GetLastStatus() == Ok) {
+        if (m_showBackground && (m_tileBackground.hasTiles() ||
+                                 (m_bgImg && m_bgImg->GetLastStatus() == Ok))) {
             if (renderBackgroundFrame() && m_backgroundOpacity > 0) {
                 if (m_backgroundOpacity >= 100) {
                     BitBlt(memDC, 0, 0, m_winSize, m_winSize,
@@ -1249,8 +1326,23 @@ LRESULT CALLBACK OverlayWindow::WndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM l
         obj->pollRouteResult();
         return 0;
     }
+    if (msg == WM_APP + 2 && obj) {
+        // 瓦片后台解码完成通知
+        obj->pollTileResults();
+        return 0;
+    }
     if (msg == WM_DESTROY) return 0;
     return DefWindowProc(hWnd, msg, wp, lp);
+}
+
+void OverlayWindow::pollTileResults() {
+    const std::size_t applied = m_tileBackground.drainCompleted();
+    if (applied == 0) {
+        return;
+    }
+
+    m_backgroundFrameDirty = true;
+    invalidate(false);
 }
 
 void OverlayWindow::setVisible(bool visible) {

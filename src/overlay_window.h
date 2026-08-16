@@ -13,6 +13,7 @@
 #include <condition_variable>
 #include "nlohmann/json.hpp"
 #include "map_transform.h"
+#include "map_tile_background.h"
 
 // 定义地图在屏幕上的物理位置常量
 const int MAP_UI_X = 1413;
@@ -52,6 +53,7 @@ private:
     void clearZoneImageCache();
     void rebuildRoute();
     void pollRouteResult();
+    void pollTileResults();
     void restoreZoomQuality();
     void drawRoute(Gdiplus::Graphics& g);
     void drawRouteMarkerState(Gdiplus::Graphics& g, const Point& pt, int localX, int localY);
@@ -112,6 +114,7 @@ private:
     HGDIOBJ m_overlayPreviousBitmap = nullptr;
     void* m_overlayBits = nullptr;
     MapTransform m_mapTransform;
+    MapTileBackground m_tileBackground;
     bool m_showBackground = false; // 默认不显示
     int m_backgroundOpacity = 100;
     bool m_backgroundFrameDirty = true;
