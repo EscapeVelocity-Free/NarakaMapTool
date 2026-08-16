@@ -61,7 +61,7 @@ set(CPACK_SOURCE_GENERATOR "") # 禁用源码包生成
 # 设置包的基本信息
 set(CPACK_PACKAGE_NAME "NarakaMapTool")
 set(CPACK_PACKAGE_VENDOR "StarStudio")
-set(CPACK_PACKAGE_VERSION "1.3.2")
+set(CPACK_PACKAGE_VERSION "1.3.3")
 set(CPACK_GENERATOR "ZIP")
 
 # 1. 指定可执行文件
