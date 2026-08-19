@@ -27274,6 +27274,30 @@
                         720.8
                     ],
                     "img": "5/bell/79743fbb01471b72cb5402abe9150fbf"
+                },
+                {
+                    "type": "bell",
+                    "pos": [
+                        332.9,
+                        958.1
+                    ],
+                    "img": "5/bell/ea6b0ff240ed27c9abb6935145c2a995"
+                },
+                {
+                    "type": "bell",
+                    "pos": [
+                        577.6,
+                        1729.4
+                    ],
+                    "img": "5/bell/e3c78ef97380b783dcaff660823a537f"
+                },
+                {
+                    "type": "bell",
+                    "pos": [
+                        1413.7,
+                        350.8
+                    ],
+                    "img": "5/bell/abf4a24f4624f595399d39b47ba939f1"
                 }
             ]
         },
