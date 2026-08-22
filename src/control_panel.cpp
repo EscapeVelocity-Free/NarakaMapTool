@@ -181,7 +181,7 @@ private:
 
 const std::set<std::string>& DefaultResourceKeys() {
     static const std::set<std::string> keys = {
-        "firefly", "wishingWell", "miniShrine", "goldenToad", "flyingTarget", "fireflyCage"
+        "firefly", "wishingWell", "miniShrine", "goldenToad", "flyingTarget", "fireflyCage", "dongPoPork"
     };
     return keys;
 }
@@ -237,7 +237,7 @@ std::vector<ControlPanel::ResourceGroup> ControlPanel::buildResourceGroups() {
                 {"萤火虫", "firefly"}, {"许愿井", "wishingWell"}, {"迷你土地", "miniShrine"},
                 {"金蟾", "goldenToad"}, {"迎春靶", "flyingTarget"}, {"萤火笼", "fireflyCage"},
                 {"沙梨圣果", "pear"}, {"刺梨", "pricklyPear"}, {"沙叻", "salak"},
-                {"蒲公英", "dandelion"}, {"锦鲤", "koi"}
+                {"蒲公英", "dandelion"}, {"锦鲤", "koi"}, {"东坡肉", "dongPoPork"}
             }
         },
         {
@@ -656,6 +656,7 @@ QFrame* ControlPanel::createControlSidebar() {
     m_mapCombo->addItem(QString::fromUtf8("龙隐洞天"), "2");
     m_mapCombo->addItem(QString::fromUtf8("风起火罗"), "3");
     m_mapCombo->addItem(QString::fromUtf8("满江红"), "4");
+    m_mapCombo->addItem(QString::fromUtf8("满江红-征神"), "7");
     m_mapCombo->addItem(QString::fromUtf8("宛渠"), "5");
     m_mapCombo->addItem(QString::fromUtf8("大风歌"), "6");
     m_mapCombo->setCurrentIndex(2);

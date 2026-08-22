@@ -193,7 +193,8 @@ std::string GetMappingFileName(std::string type) {
         {"angelfish", "angelfish"}, {"azureFinchFish", "azure_finch_fish"},
         {"azureWaveCoralline", "azure_wave_coralline"}, {"goldenFlameCoralline", "golden_flame_coralline"},
         {"grandLizard", "grand_lizard"}, {"stingtailFish", "stingtail_fish"},
-        {"violetCoralline", "violet_coralline"}, {"highResourceZone", "high_resource_zone"}
+        {"violetCoralline", "violet_coralline"}, {"highResourceZone", "high_resource_zone"},
+        {"dongPoPork", "dongpo_pork"}
     };
     if (nameMap.count(type)) return nameMap[type];
     return type;
@@ -207,7 +208,14 @@ static std::string ResolveMapBackgroundName(const std::string& mapId, int layer)
     if (mapId == "4") return "rivers_runs_red.png";
     if (mapId == "5") return "wanchu.png";
     if (mapId == "6") return layer == 1 ? "stormchant_underground.png" : "stormchant.png";
+    if (mapId == "7") return "rivers_runs_red.png";
     return {};
+}
+
+static std::string ResolveMapTileSourceId(const std::string& mapId) {
+    // 满江红-征神使用同一张游戏底图，复用满江红的高精度瓦片，避免重复打包资源。
+    if (mapId == "7") return "4";
+    return mapId;
 }
 
 OverlayWindow::OverlayWindow() : m_hwnd(NULL), m_bgImg(NULL), m_currentMapId("2"), m_currentMapName(u8"龙隐洞天") {
@@ -304,7 +312,7 @@ void OverlayWindow::setMapLayer(int layer) {
 
 void OverlayWindow::loadMapBackground() {
     m_backgroundFrameDirty = true;
-    m_tileBackground.setMap(m_currentMapId, m_currentLayer);
+    m_tileBackground.setMap(ResolveMapTileSourceId(m_currentMapId), m_currentLayer);
     if (m_bgImg) {
         delete m_bgImg;
         m_bgImg = nullptr;

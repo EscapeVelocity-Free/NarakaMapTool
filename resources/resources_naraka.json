@@ -30241,5 +30241,76 @@
             ]
         },
         "map": "6"
+    },
+    {
+        "dongPoPork": {
+            "MarkerList": [
+                {
+                    "type": "dongPoPork",
+                    "pos": [
+                        1155.6,
+                        1304.5
+                    ],
+                    "img": "7/dongPoPork/1"
+                },
+                {
+                    "type": "dongPoPork",
+                    "pos": [
+                        1158.0,
+                        1497.4
+                    ],
+                    "img": "7/dongPoPork/2"
+                },
+                {
+                    "type": "dongPoPork",
+                    "pos": [
+                        1150.1,
+                        1006.0
+                    ],
+                    "img": "7/dongPoPork/3"
+                },
+                {
+                    "type": "dongPoPork",
+                    "pos": [
+                        1019.2,
+                        923.1
+                    ],
+                    "img": "7/dongPoPork/4"
+                },
+                {
+                    "type": "dongPoPork",
+                    "pos": [
+                        1167.0,
+                        939.2
+                    ],
+                    "img": "7/dongPoPork/5"
+                },
+                {
+                    "type": "dongPoPork",
+                    "pos": [
+                        1011.2,
+                        609.2
+                    ],
+                    "img": "7/dongPoPork/6"
+                },
+                {
+                    "type": "dongPoPork",
+                    "pos": [
+                        1128.1,
+                        637.7
+                    ],
+                    "img": "7/dongPoPork/7"
+                },
+                {
+                    "type": "dongPoPork",
+                    "pos": [
+                        1048.3,
+                        575.1
+                    ],
+                    "img": "7/dongPoPork/8"
+                }
+            ]
+        },
+        "map": "7"
     }
 ]
