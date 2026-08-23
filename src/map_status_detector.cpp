@@ -11,6 +11,16 @@ MapStatusDetector::MapStatusDetector(QObject* parent) : QObject(parent) {
         THRESHOLD, ConfigManager::detectorX, ConfigManager::detectorY);
 }
 
+void MapStatusDetector::setShortcutHandlingSuspended(bool suspended) {
+    if (m_shortcutHandlingSuspended == suspended) {
+        return;
+    }
+
+    m_shortcutHandlingSuspended = suspended;
+    clearRouteKeyStates();
+    Logger::info("Map shortcut handling suspended: suspended={}", suspended);
+}
+
 void MapStatusDetector::processTick() {
     // 1. 检测地图状态
     bool currentWhite = isPixelAreaWhite(2);
@@ -32,7 +42,7 @@ void MapStatusDetector::processTick() {
     }
 
     // 2. 检测地图打开时有效的快捷键
-    if (m_isMapOpen) {
+    if (m_isMapOpen && !m_shortcutHandlingSuspended) {
         if (isKeyPressedOnce(VK_LMENU, m_altWasPressed)) {
             Logger::info("Detected Alt navigation shortcut while map is open.");
             emit altTriggered();

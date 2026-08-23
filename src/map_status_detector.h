@@ -10,6 +10,7 @@ class MapStatusDetector : public QObject {
     Q_OBJECT
 public:
     explicit MapStatusDetector(QObject* parent = nullptr);
+    void setShortcutHandlingSuspended(bool suspended);
 
 signals:
     void mapVisibilityChanged(bool visible); // 地图打开/关闭信号
@@ -34,6 +35,7 @@ private:
     bool m_routeStartWasPressed = false;
     bool m_routeExcludeWasPressed = false;
     bool m_routeResetWasPressed = false;
+    bool m_shortcutHandlingSuspended = false;
 
     int m_whiteCount = 0;
     int m_blackCount = 0;

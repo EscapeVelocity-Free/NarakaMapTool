@@ -15,8 +15,15 @@ int ConfigManager::detectorY = 0;
 
 std::string ConfigManager::resourcePath = "./resources/";
 std::string ConfigManager::mapImagePath = "./map/";
+bool ConfigManager::quickPanelEnabled = true;
+std::string ConfigManager::quickPanelHotkey = "Ctrl+F1";
+
+namespace {
+std::string g_configFilename = "config.json";
+}
 
 void ConfigManager::init(const std::string& filename) {
+    g_configFilename = filename;
     // --- 第一阶段：动态计算 (基于 2K 基准) ---
     int screenW = GetSystemMetrics(SM_CXSCREEN);
     int screenH = GetSystemMetrics(SM_CYSCREEN);
@@ -50,6 +57,12 @@ void ConfigManager::init(const std::string& filename) {
 
             if (j.contains("resource_path")) resourcePath = j["resource_path"];
             if (j.contains("map_path")) mapImagePath = j["map_path"];
+            if (j.contains("quick_panel_enabled") && j["quick_panel_enabled"].is_boolean()) {
+                quickPanelEnabled = j["quick_panel_enabled"];
+            }
+            if (j.contains("quick_panel_hotkey") && j["quick_panel_hotkey"].is_string()) {
+                quickPanelHotkey = j["quick_panel_hotkey"].get<std::string>();
+            }
 
             Logger::info("Config file loaded successfully, partially overridden parameters.");
             Logger::info("Config file loaded successfully: {}", filename);
@@ -71,6 +84,8 @@ void ConfigManager::init(const std::string& filename) {
             j["detector_y"] = detectorY;
             j["resource_path"] = resourcePath;
             j["map_path"] = mapImagePath;
+            j["quick_panel_enabled"] = quickPanelEnabled;
+            j["quick_panel_hotkey"] = quickPanelHotkey;
 
             std::ofstream out(filename);
             if (out.is_open()) {
@@ -90,4 +105,38 @@ void ConfigManager::init(const std::string& filename) {
 
     Logger::info("Effective configuration: overlay=({}, {}) size={}, detector=({}, {}), resources={}, maps={}",
         mapOffsetX, mapOffsetY, mapUiSize, detectorX, detectorY, resourcePath, mapImagePath);
+    Logger::info("Effective quick-panel configuration: enabled={} hotkey={}",
+        quickPanelEnabled, quickPanelHotkey);
+}
+
+bool ConfigManager::saveQuickPanelSettings(bool enabled, const std::string& hotkey) {
+    try {
+        json config = json::object();
+        std::ifstream input(g_configFilename);
+        if (input.is_open()) {
+            input >> config;
+        }
+
+        config["quick_panel_enabled"] = enabled;
+        config["quick_panel_hotkey"] = hotkey;
+
+        std::ofstream output(g_configFilename, std::ios::trunc);
+        if (!output.is_open()) {
+            Logger::error("Failed to save quick-panel settings: config={} reason=open_failed",
+                g_configFilename);
+            return false;
+        }
+
+        output << config.dump(4);
+        output.close();
+        quickPanelEnabled = enabled;
+        quickPanelHotkey = hotkey;
+        Logger::info("Quick-panel settings saved: enabled={} hotkey={}", enabled, hotkey);
+        return true;
+    }
+    catch (const std::exception& e) {
+        Logger::error("Failed to save quick-panel settings: config={} reason={}",
+            g_configFilename, e.what());
+        return false;
+    }
 }

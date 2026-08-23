@@ -2,12 +2,15 @@
 #include <QIcon>
 #include <QPixmap>
 #include <QImage>
+#include <QKeySequence>
 #include <QTimer>
 #include <QtPlugin>
 #include "control_panel.h"
+#include "global_hotkey_monitor.h"
 #include "overlay_window.h"
 #include "map_status_detector.h"
 #include "mouse_input_monitor.h"
+#include "quick_panel_controller.h"
 #include "config_manager.h"
 #include "logger.h"
 
@@ -59,12 +62,71 @@ int main(int argc, char* argv[]) {
         Logger::debug("Control panel activated after the initial event loop turn.");
         });
 
+    GlobalHotkeyMonitor quickPanelHotkey;
+    QuickPanelController quickPanelController(&panel);
+
     MapStatusDetector detector;
     Logger::info("Map status detector created.");
 
     MouseInputMonitor mouseInputMonitor;
 
     // 2. 建立逻辑连接 (信号与槽)
+
+    QObject::connect(&quickPanelHotkey, &GlobalHotkeyMonitor::pressed,
+        &quickPanelController, &QuickPanelController::showForShortcut);
+    QObject::connect(&quickPanelHotkey, &GlobalHotkeyMonitor::released,
+        &quickPanelController, &QuickPanelController::minimizeAfterShortcut);
+
+    auto quickPanelHint = [&quickPanelHotkey]() {
+        return QString::fromUtf8("按住 %1 呼出，松开后返回游戏")
+            .arg(quickPanelHotkey.shortcut().toString(QKeySequence::NativeText));
+    };
+
+    QObject::connect(&panel, &ControlPanel::quickPanelEnabledChanged, [&](bool enabled) {
+        QString error;
+        if (!quickPanelHotkey.setEnabled(enabled, &error)) {
+            panel.setQuickPanelEnabled(false);
+            panel.setQuickPanelHotkeyStatus(error, true);
+            ConfigManager::saveQuickPanelSettings(false,
+                quickPanelHotkey.shortcut().toString(QKeySequence::PortableText).toStdString());
+            return;
+        }
+
+        panel.setQuickPanelHotkeyStatus(quickPanelHint(), false);
+        ConfigManager::saveQuickPanelSettings(enabled,
+            quickPanelHotkey.shortcut().toString(QKeySequence::PortableText).toStdString());
+    });
+
+    QObject::connect(&panel, &ControlPanel::quickPanelHotkeyChanged,
+        [&](const QKeySequence& hotkey) {
+            const QKeySequence previousHotkey = quickPanelHotkey.shortcut();
+            QString error;
+            if (!quickPanelHotkey.setShortcut(hotkey, &error)) {
+                panel.setQuickPanelHotkey(previousHotkey);
+                panel.setQuickPanelHotkeyStatus(error, true);
+                return;
+            }
+
+            panel.setQuickPanelHotkey(quickPanelHotkey.shortcut());
+            panel.setQuickPanelHotkeyStatus(quickPanelHint(), false);
+            ConfigManager::saveQuickPanelSettings(quickPanelHotkey.isEnabled(),
+                quickPanelHotkey.shortcut().toString(QKeySequence::PortableText).toStdString());
+        });
+
+    QObject::connect(&panel, &ControlPanel::quickPanelHotkeyCaptureChanged,
+        [&](bool active) {
+            detector.setShortcutHandlingSuspended(active);
+            QString error;
+            if (quickPanelHotkey.setCaptureSuspended(active, &error)) {
+                return;
+            }
+
+            quickPanelHotkey.setEnabled(false);
+            panel.setQuickPanelEnabled(false);
+            panel.setQuickPanelHotkeyStatus(error, true);
+            ConfigManager::saveQuickPanelSettings(false,
+                quickPanelHotkey.shortcut().toString(QKeySequence::PortableText).toStdString());
+        });
 
     // UI -> Overlay (更新地图和资源)
     QObject::connect(&panel, &ControlPanel::mapChanged, [&](const std::string& id, const std::string& name) {
@@ -131,6 +193,47 @@ int main(int argc, char* argv[]) {
         Logger::info("Main bridge received border visibility update: enabled={}", enabled);
         overlay.setShowBorder(enabled);
     });
+
+    QKeySequence configuredQuickPanelHotkey = QKeySequence::fromString(
+        QString::fromStdString(ConfigManager::quickPanelHotkey), QKeySequence::PortableText);
+    if (configuredQuickPanelHotkey.isEmpty()) {
+        configuredQuickPanelHotkey = QKeySequence(QStringLiteral("Ctrl+F1"));
+    }
+
+    QString quickPanelError;
+    bool quickPanelShortcutReady = quickPanelHotkey.setShortcut(
+        configuredQuickPanelHotkey, &quickPanelError);
+    if (!quickPanelShortcutReady && configuredQuickPanelHotkey != QKeySequence(QStringLiteral("Ctrl+F1"))) {
+        configuredQuickPanelHotkey = QKeySequence(QStringLiteral("Ctrl+F1"));
+        quickPanelShortcutReady = quickPanelHotkey.setShortcut(
+            configuredQuickPanelHotkey, &quickPanelError);
+    }
+
+    panel.setQuickPanelHotkey(configuredQuickPanelHotkey);
+    if (quickPanelShortcutReady && ConfigManager::quickPanelEnabled &&
+        quickPanelHotkey.setEnabled(true, &quickPanelError)) {
+        panel.setQuickPanelEnabled(true);
+        panel.setQuickPanelHotkeyStatus(quickPanelHint(), false);
+    }
+    else {
+        quickPanelHotkey.setEnabled(false);
+        panel.setQuickPanelEnabled(false);
+        if (quickPanelError.isEmpty()) {
+            quickPanelError = QString::fromUtf8("快捷呼出已关闭");
+        }
+        panel.setQuickPanelHotkeyStatus(quickPanelError,
+            ConfigManager::quickPanelEnabled || !quickPanelShortcutReady);
+    }
+
+    if (quickPanelShortcutReady) {
+        const std::string effectiveHotkey = quickPanelHotkey.shortcut()
+            .toString(QKeySequence::PortableText).toStdString();
+        if (ConfigManager::quickPanelEnabled != quickPanelHotkey.isEnabled() ||
+            ConfigManager::quickPanelHotkey != effectiveHotkey) {
+            ConfigManager::saveQuickPanelSettings(quickPanelHotkey.isEnabled(), effectiveHotkey);
+        }
+    }
+
     mouseInputMonitor.start();
     Logger::info("All UI, detector, and overlay signal connections established. Entering event loop.");
     return a.exec(); // 开启 Qt 标准事件循环

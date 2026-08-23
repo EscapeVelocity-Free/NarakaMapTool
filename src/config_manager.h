@@ -5,19 +5,23 @@
 
 class ConfigManager {
 public:
-    // ×îÖÕÉúĞ§µÄ²ÎÊı
+    // æœ€ç»ˆç”Ÿæ•ˆçš„å‚æ•°
     static int mapOffsetX;
     static int mapOffsetY;
     static int mapUiSize;
     static int detectorX;
     static int detectorY;
 
-    // Â·¾¶
+    // è·¯å¾„
     static std::string resourcePath;
     static std::string mapImagePath;
 
-    // ³õÊ¼»¯£ºÏÈ¶¯Ì¬¼ÆËã£¬ÔÙ³¢ÊÔÎÄ¼ş¸²¸Ç
+    static bool quickPanelEnabled;
+    static std::string quickPanelHotkey;
+
+    // åˆå§‹åŒ–ï¼šå…ˆåŠ¨æ€è®¡ç®—ï¼Œå†å°è¯•æ–‡ä»¶è¦†ç›–
     static void init(const std::string& filename);
+    static bool saveQuickPanelSettings(bool enabled, const std::string& hotkey);
 };
 
 #endif

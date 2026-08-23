@@ -4,6 +4,7 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QFrame>
+#include <QKeySequence>
 #include <QPushButton>
 #include <QWidget>
 
@@ -16,12 +17,17 @@
 class QLabel;
 class QLayout;
 class QGridLayout;
+class QEvent;
+class QKeySequenceEdit;
 class QSlider;
 
 class ControlPanel : public QWidget {
     Q_OBJECT
 public:
     explicit ControlPanel(QWidget* parent = nullptr);
+    void setQuickPanelEnabled(bool enabled);
+    void setQuickPanelHotkey(const QKeySequence& hotkey);
+    void setQuickPanelHotkeyStatus(const QString& message, bool isError);
 
 signals:
     // 切换地图信号，参数为 (mapId, mapName)
@@ -35,6 +41,12 @@ signals:
     void toggleMapZoom(bool enabled);
     void toggleAlwaysVisible(bool enabled);
     void toggleBorder(bool enabled);
+    void quickPanelEnabledChanged(bool enabled);
+    void quickPanelHotkeyChanged(const QKeySequence& hotkey);
+    void quickPanelHotkeyCaptureChanged(bool active);
+
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override;
 
 private:
     struct ResourceItem;
@@ -61,7 +73,8 @@ private:
     void applyCardShadow(QFrame* card);
     void connectActions(QPushButton* selectAllButton, QPushButton* clearAllButton,
         QCheckBox* showBackgroundBox, QSlider* backgroundOpacitySlider, QLabel* opacityValueLabel,
-        QCheckBox* allowMapZoomBox, QCheckBox* alwaysVisibleBox, QCheckBox* showBorderBox);
+        QCheckBox* allowMapZoomBox, QCheckBox* alwaysVisibleBox, QCheckBox* showBorderBox,
+        QCheckBox* quickPanelEnabledBox, QKeySequenceEdit* quickPanelHotkeyEdit);
     bool isStormchantMapSelected() const;
     bool isResourceAvailable(const ResourceBinding& binding) const;
     int currentLayer() const;
@@ -85,6 +98,9 @@ private:
     QCheckBox* m_allowMapZoomBox = nullptr;
     QCheckBox* m_alwaysVisibleBox = nullptr;
     QCheckBox* m_showBorderBox = nullptr;
+    QCheckBox* m_quickPanelEnabledBox = nullptr;
+    QKeySequenceEdit* m_quickPanelHotkeyEdit = nullptr;
+    QLabel* m_quickPanelHotkeyHint = nullptr;
     QPushButton* m_selectAllButton = nullptr;
     QPushButton* m_clearAllButton = nullptr;
 };

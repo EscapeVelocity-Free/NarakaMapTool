@@ -3,17 +3,22 @@
 #include <QAbstractButton>
 #include <QCheckBox>
 #include <QColor>
+#include <QEvent>
 #include <QGridLayout>
 #include <QGraphicsDropShadowEffect>
 #include <QHBoxLayout>
+#include <QKeySequenceEdit>
 #include <QLabel>
 #include <QLayout>
 #include <QLayoutItem>
+#include <QLineEdit>
 #include <QRect>
 #include <QScrollArea>
+#include <QSignalBlocker>
 #include <QSize>
 #include <QSizePolicy>
 #include <QSlider>
+#include <QStyle>
 #include <QTimer>
 #include <QVBoxLayout>
 
@@ -219,13 +224,58 @@ ControlPanel::ControlPanel(QWidget* parent)
 
     connectActions(m_selectAllButton, m_clearAllButton, m_showBackgroundBox,
         m_backgroundOpacitySlider, m_opacityValueLabel, m_allowMapZoomBox, m_alwaysVisibleBox,
-        m_showBorderBox);
+        m_showBorderBox, m_quickPanelEnabledBox, m_quickPanelHotkeyEdit);
     updateLayerSelectorVisibility();
     refreshResourceVisibility();
     QTimer::singleShot(100, this, &ControlPanel::notifySelectionChanged);
     Logger::info("Control panel initialized: resource_controls={} sections={} catalog_loaded={} default_map_id={}",
         m_resourceButtons.size(), m_resourceSections.size(), m_resourceCatalog.isLoaded(),
         m_mapCombo->currentData().toString().toStdString());
+}
+
+void ControlPanel::setQuickPanelEnabled(bool enabled) {
+    if (m_quickPanelEnabledBox) {
+        const QSignalBlocker blocker(m_quickPanelEnabledBox);
+        m_quickPanelEnabledBox->setChecked(enabled);
+    }
+    if (m_quickPanelHotkeyEdit) {
+        m_quickPanelHotkeyEdit->setEnabled(enabled);
+    }
+}
+
+void ControlPanel::setQuickPanelHotkey(const QKeySequence& hotkey) {
+    if (!m_quickPanelHotkeyEdit) {
+        return;
+    }
+    const QSignalBlocker blocker(m_quickPanelHotkeyEdit);
+    m_quickPanelHotkeyEdit->setKeySequence(hotkey);
+}
+
+void ControlPanel::setQuickPanelHotkeyStatus(const QString& message, bool isError) {
+    if (!m_quickPanelHotkeyHint) {
+        return;
+    }
+
+    m_quickPanelHotkeyHint->setText(message);
+    m_quickPanelHotkeyHint->setProperty("error", isError);
+    m_quickPanelHotkeyHint->style()->unpolish(m_quickPanelHotkeyHint);
+    m_quickPanelHotkeyHint->style()->polish(m_quickPanelHotkeyHint);
+}
+
+bool ControlPanel::eventFilter(QObject* watched, QEvent* event) {
+    auto* watchedWidget = qobject_cast<QWidget*>(watched);
+    const bool isHotkeyEditor = watched == m_quickPanelHotkeyEdit ||
+        (m_quickPanelHotkeyEdit && watchedWidget && m_quickPanelHotkeyEdit->isAncestorOf(watchedWidget));
+    if (isHotkeyEditor) {
+        if (event->type() == QEvent::FocusIn) {
+            setQuickPanelHotkeyStatus(QString::fromUtf8("请按下新的快捷键组合"), false);
+            emit quickPanelHotkeyCaptureChanged(true);
+        }
+        else if (event->type() == QEvent::FocusOut) {
+            emit quickPanelHotkeyCaptureChanged(false);
+        }
+    }
+    return QWidget::eventFilter(watched, event);
 }
 
 std::vector<ControlPanel::ResourceGroup> ControlPanel::buildResourceGroups() {
@@ -370,11 +420,15 @@ void ControlPanel::setupStyle() {
             font-weight: 800;
         }
         QLabel#appSubtitle, QLabel#sectionSubtitle, QLabel#fieldLabel,
-        QLabel#sectionDescription, QLabel#selectionSummary, QLabel#sidebarHint {
+        QLabel#sectionDescription, QLabel#selectionSummary, QLabel#sidebarHint,
+        QLabel#quickPanelHotkeyHint {
             background: transparent;
             color: #8491a3;
             font-size: 11px;
             font-weight: 500;
+        }
+        QLabel#quickPanelHotkeyHint[error="true"] {
+            color: #d14343;
         }
         QLabel#sectionTitle, QLabel#resourcePanelTitle, QLabel#sidebarTitle {
             background: transparent;
@@ -471,6 +525,26 @@ void ControlPanel::setupStyle() {
         QComboBox::drop-down {
             border: 0;
             width: 26px;
+        }
+        QKeySequenceEdit#quickPanelHotkeyEdit QLineEdit {
+            min-height: 34px;
+            padding: 3px 10px;
+            border: 1px solid #d8dee9;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #182230;
+            font-weight: 600;
+            selection-background-color: #dbeafe;
+        }
+        QKeySequenceEdit#quickPanelHotkeyEdit QLineEdit:hover {
+            border-color: #93b4e8;
+        }
+        QKeySequenceEdit#quickPanelHotkeyEdit QLineEdit:focus {
+            border: 1px solid #2563eb;
+        }
+        QKeySequenceEdit#quickPanelHotkeyEdit QLineEdit:disabled {
+            background: #f1f4f8;
+            color: #9aa6b5;
         }
         QCheckBox {
             spacing: 0;
@@ -740,6 +814,50 @@ QFrame* ControlPanel::createControlSidebar() {
     m_showBorderBox->setToolTip(QString::fromUtf8("显示或隐藏透明地图边缘的红色定位边框"));
 
     layout->addSpacing(8);
+    auto* quickPanelDivider = new QFrame(sidebar);
+    quickPanelDivider->setObjectName("sidebarDivider");
+    layout->addWidget(quickPanelDivider, 0, Qt::AlignTop);
+
+    auto* quickPanelTitle = new QLabel(QString::fromUtf8("快捷操作"), sidebar);
+    quickPanelTitle->setObjectName("sidebarTitle");
+    layout->addWidget(quickPanelTitle);
+
+    m_quickPanelEnabledBox = addSwitchRow(QString::fromUtf8("按住呼出面板"));
+    m_quickPanelEnabledBox->setChecked(ConfigManager::quickPanelEnabled);
+    m_quickPanelEnabledBox->setToolTip(
+        QString::fromUtf8("按住全局快捷键临时置顶控制面板，松开后最小化并返回游戏"));
+
+    auto* quickPanelHotkeyLabel = new QLabel(QString::fromUtf8("快捷键"), sidebar);
+    quickPanelHotkeyLabel->setObjectName("fieldLabel");
+    layout->addWidget(quickPanelHotkeyLabel);
+
+    QKeySequence configuredHotkey = QKeySequence::fromString(
+        QString::fromStdString(ConfigManager::quickPanelHotkey), QKeySequence::PortableText);
+    if (configuredHotkey.isEmpty()) {
+        configuredHotkey = QKeySequence(QStringLiteral("Ctrl+F1"));
+    }
+
+    m_quickPanelHotkeyEdit = new QKeySequenceEdit(configuredHotkey, sidebar);
+    m_quickPanelHotkeyEdit->setObjectName("quickPanelHotkeyEdit");
+    m_quickPanelHotkeyEdit->setMaximumSequenceLength(1);
+    m_quickPanelHotkeyEdit->setEnabled(ConfigManager::quickPanelEnabled);
+    m_quickPanelHotkeyEdit->setToolTip(QString::fromUtf8(
+        "点击后录入一个新组合；Alt 和路线快捷键不可使用"));
+    m_quickPanelHotkeyEdit->installEventFilter(this);
+    if (auto* lineEdit = m_quickPanelHotkeyEdit->findChild<QLineEdit*>()) {
+        lineEdit->installEventFilter(this);
+    }
+    layout->addWidget(m_quickPanelHotkeyEdit);
+
+    m_quickPanelHotkeyHint = new QLabel(
+        QString::fromUtf8("按住 %1 呼出，松开后返回游戏")
+            .arg(configuredHotkey.toString(QKeySequence::NativeText)),
+        sidebar);
+    m_quickPanelHotkeyHint->setObjectName("quickPanelHotkeyHint");
+    m_quickPanelHotkeyHint->setWordWrap(true);
+    layout->addWidget(m_quickPanelHotkeyHint);
+
+    layout->addSpacing(8);
     auto* footerDivider = new QFrame(sidebar);
     footerDivider->setObjectName("sidebarDivider");
     layout->addWidget(footerDivider, 0, Qt::AlignTop);
@@ -889,7 +1007,8 @@ void ControlPanel::applyCardShadow(QFrame* card) {
 
 void ControlPanel::connectActions(QPushButton* selectAllButton, QPushButton* clearAllButton,
     QCheckBox* showBackgroundBox, QSlider* backgroundOpacitySlider, QLabel* opacityValueLabel,
-    QCheckBox* allowMapZoomBox, QCheckBox* alwaysVisibleBox, QCheckBox* showBorderBox) {
+    QCheckBox* allowMapZoomBox, QCheckBox* alwaysVisibleBox, QCheckBox* showBorderBox,
+    QCheckBox* quickPanelEnabledBox, QKeySequenceEdit* quickPanelHotkeyEdit) {
     connect(showBackgroundBox, &QCheckBox::stateChanged, [this](int state) {
         if (m_backgroundOpacitySlider) {
             m_backgroundOpacitySlider->setEnabled(state == Qt::Checked);
@@ -917,6 +1036,22 @@ void ControlPanel::connectActions(QPushButton* selectAllButton, QPushButton* cle
         Logger::info("Control panel border switch changed: enabled={}", enabled);
         emit toggleBorder(enabled);
     });
+
+    connect(quickPanelEnabledBox, &QCheckBox::toggled,
+        [this, quickPanelHotkeyEdit](bool enabled) {
+            quickPanelHotkeyEdit->setEnabled(enabled);
+            Logger::info("Control panel quick-access switch changed: enabled={}", enabled);
+            emit quickPanelEnabledChanged(enabled);
+        });
+
+    connect(quickPanelHotkeyEdit, &QKeySequenceEdit::editingFinished,
+        [this, quickPanelHotkeyEdit]() {
+            const QKeySequence hotkey = quickPanelHotkeyEdit->keySequence();
+            Logger::info("Control panel quick-access shortcut edit finished: shortcut={}",
+                hotkey.toString(QKeySequence::PortableText).toStdString());
+            emit quickPanelHotkeyChanged(hotkey);
+            quickPanelHotkeyEdit->clearFocus();
+        });
 
     connect(m_mapCombo, &QComboBox::currentIndexChanged, [this](int) {
         if (m_layerCombo) {

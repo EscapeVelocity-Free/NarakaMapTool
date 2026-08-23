@@ -16,6 +16,8 @@ set(SOURCES
     src/overlay_window.cpp
     src/map_status_detector.cpp
     src/config_manager.cpp
+    src/global_hotkey_monitor.cpp
+    src/quick_panel_controller.cpp
     src/resource_catalog.cpp
     src/map_transform.cpp
     src/map_tile_background.cpp
@@ -39,6 +41,11 @@ if(MSVC)
     add_executable(NarakaMapTool WIN32 ${SOURCES})
 else()
     add_executable(NarakaMapTool ${SOURCES})
+endif()
+
+if(MSVC)
+    # 统一按 UTF-8 解析源码与生成字符串，避免中文 UI 文案受系统代码页影响。
+    target_compile_options(NarakaMapTool PRIVATE /utf-8)
 endif()
 
 target_link_libraries(NarakaMapTool PRIVATE 
